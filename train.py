@@ -34,6 +34,6 @@ def main():
     model = Model()
     trainer = Trainer(model, train_dataset, valid_dataset, test_dataset)
     trainer.fit()
-
+    trainer.evaluate(test_dataset)
 if __name__ == '__main__':
     main()

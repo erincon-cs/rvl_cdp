@@ -76,8 +76,8 @@ class Trainer:
 
             print("\nEpoch {} loss: {}".format(i, np.mean(training_loss)))
 
-            if self.test_dataset:
-                self.evaluate(self.test_dataset)
+            if self.valid_dataset:
+                self.evaluate(self.valid_dataset)
 
     def evaluate(self, dataset, data_loader=None, minibatch_size=64):
         if not self.trained:
@@ -100,12 +100,13 @@ class Trainer:
         with torch.no_grad():
             for minibatch_i, samples in enumerate(data_loader):
                 start = time.time()
-                text, labels = samples["text"], samples["labels"]
+                images, labels = samples["image"], samples["label"]
+
                 if torch.cuda.is_available():
-                    text = text.cuda()
+                    images = images.cuda()
 
                 # text = text.permute(1, 2, 0, 3)
-                preds = self.model.predict(text)
+                preds = self.model.predict(images)
 
                 y_true.append(labels.numpy())
 
