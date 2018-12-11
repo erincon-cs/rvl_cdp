@@ -1,0 +1,123 @@
+import sys
+import time
+
+import numpy as np
+import torch
+
+from sklearn.metrics import accuracy_score
+from torch import optim, nn as nn
+from torch.utils.data import DataLoader
+
+from torch.autograd import Variable
+
+
+class Trainer:
+    def __init__(self, model, training_dataset, valid_dataset=None, test_dataset=None):
+        self.model = model.train()
+        self.training_dataset = training_dataset
+        self.valid_dataset = valid_dataset
+        self.test_dataset = test_dataset
+        self.trained = False
+
+    def fit(self, nb_epochs=10, learning_rate=0.001, minibatch_size=64, verbose=True):
+        self.trained = True
+
+        network_optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
+        criterion = nn.CrossEntropyLoss()
+
+        running_loss = 0.0
+        running_time = 0.0
+        data_loader = DataLoader(self.training_dataset, batch_size=minibatch_size,
+                                 shuffle=True, num_workers=0)
+
+        if torch.cuda.is_available():
+            self.model.cuda()
+
+        training_loss = []
+
+        for i in range(1, nb_epochs + 1):
+            print("Epoch: {}".format(i))
+            running_loss = 0
+
+            for minibatch_i, samples in enumerate(data_loader):
+                start = time.time()
+                image, labels = samples["image"], samples["label"]
+
+                if torch.cuda.is_available():
+                    image = image.cuda()
+                network_optimizer.zero_grad()
+
+                self.model.train()
+                output = self.model(image)
+
+                if torch.cuda.is_available():
+                    labels = labels.cuda()
+
+                labels = Variable(labels)
+
+                loss = criterion(output, labels)
+
+                loss.backward()
+                network_optimizer.step()
+
+                loss = loss.item()
+
+                training_loss.append(loss)
+
+                running_loss += loss
+                end = time.time()
+                running_time += (end - start)
+
+                avg_loss = running_loss / ((minibatch_i + 1) * minibatch_size)
+                avg_mb_time = running_time / (minibatch_i + 1)
+                sys.stdout.write("\r" + "running loss: {0:.5f}".format(avg_loss) + \
+                                 " - average time minibatch: {0:.2f}s".format(avg_mb_time))
+                sys.stdout.flush()
+
+            print("\nEpoch {} loss: {}".format(i, np.mean(training_loss)))
+
+            if self.test_dataset:
+                self.evaluate(self.test_dataset)
+
+    def evaluate(self, dataset, data_loader=None, minibatch_size=64):
+        if not self.trained:
+            raise UserWarning("Model is not trained yet!")
+
+        if data_loader is None:
+            data_loader = DataLoader(dataset, batch_size=minibatch_size,
+                                     shuffle=False, num_workers=3)
+
+        print("Evaluating on {} examples".format(len(data_loader)))
+
+        if torch.cuda.is_available():
+            self.model.cuda()
+
+        y = []
+        y_true = []
+
+        running_time = 0
+
+        with torch.no_grad():
+            for minibatch_i, samples in enumerate(data_loader):
+                start = time.time()
+                text, labels = samples["text"], samples["labels"]
+                if torch.cuda.is_available():
+                    text = text.cuda()
+
+                # text = text.permute(1, 2, 0, 3)
+                preds = self.model.predict(text)
+
+                y_true.append(labels.numpy())
+
+                end = time.time()
+                running_time += (end - start)
+
+                avg_mb_time = running_time / (minibatch_i + 1)
+                sys.stdout.write("\r" + " - average time minibatch: {0:.2f}s".format(avg_mb_time))
+                sys.stdout.flush()
+                y.append(preds)
+
+            y = np.hstack(y)
+            y_true = np.hstack(y_true)
+
+            print("\nAccuracy: {0:.2f}".format(accuracy_score(y, y_true)))
