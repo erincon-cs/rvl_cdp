@@ -18,7 +18,7 @@ setup(
     description=("An demonstration on how to beat Suyog's model that runs on a 980TI"),
     url="http://packages.python.org/an_example_pypi_project",
     packages=find_packages(),
-    long_description=read('README'),
+    long_description=read('README.md'),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
