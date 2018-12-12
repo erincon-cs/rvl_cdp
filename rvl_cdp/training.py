@@ -1,6 +1,6 @@
 import sys
 import time
-
+import os
 import numpy as np
 import torch
 
@@ -10,9 +10,12 @@ from torch.utils.data import DataLoader
 
 from torch.autograd import Variable
 
+from tensorboardX import SummaryWriter
+
 
 class Trainer:
-    def __init__(self, model, training_dataset, valid_dataset=None, test_dataset=None):
+    def __init__(self, model, training_dataset, valid_dataset=None, test_dataset=None,
+                 summary_path=None):
         self.model = model.train()
         self.training_dataset = training_dataset
         self.valid_dataset = valid_dataset
@@ -20,6 +23,14 @@ class Trainer:
         self.trained = False
 
         self.max_score = 0
+
+        # creates writer2 object with auto generated file name if the summary_path is set to None,
+        # the dir will be something like 'runs/Aug20-17-20-33'
+        if summary_path is not None and not os.path.exists(summary_path):
+            print("Path {} does not exist!".format(summary_path))
+            os.makedirs(summary_path)
+
+        self.writer = SummaryWriter(summary_path)
 
     def fit(self, nb_epochs=10, learning_rate=0.001,
             num_workers=3, minibatch_size=64, verbose=True):
@@ -68,6 +79,9 @@ class Trainer:
                 training_loss.append(loss)
 
                 running_loss += loss
+
+                self.writer.add_scalar("training loss", running_loss, minibatch_i * i)
+
                 end = time.time()
                 running_time += (end - start)
 
