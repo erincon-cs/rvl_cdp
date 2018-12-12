@@ -1,3 +1,4 @@
+import torch
 from torchvision.models import densenet121
 
 import torch.nn as nn
@@ -21,3 +22,6 @@ class DenseNet121(nn.Module):
         x = self.classifier(x[:,-1,:])
 
         return x
+
+    def save(self, path):
+        torch.save(self..state_dict(), path)

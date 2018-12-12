@@ -19,6 +19,8 @@ class Trainer:
         self.test_dataset = test_dataset
         self.trained = False
 
+        self.max_score = 0
+
     def fit(self, nb_epochs=10, learning_rate=0.001, minibatch_size=64, verbose=True):
         self.trained = True
 
@@ -120,5 +122,10 @@ class Trainer:
 
             y = np.hstack(y)
             y_true = np.hstack(y_true)
+            accuracy = accuracy_score(y, y_true)
 
-            print("\nAccuracy: {0:.2f}".format(accuracy_score(y, y_true)))
+            print("\nAccuracy: {0:.2f}".format(accuracy))
+
+            if accuracy > self.max_score:
+                self.max_score = accuracy
+                self.model.save("best_model.model")
