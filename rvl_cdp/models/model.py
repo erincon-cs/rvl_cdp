@@ -39,7 +39,7 @@ class DenseNet121(BaseModel):
         self.features = nn.Sequential(*list(densenet121(pretrained=pretrained).children())[:-1])
         self.classifier = nn.Linear(8, self.nb_classes)
 
-    def forward(self, *input):
+    def forward(self, x):
         x = self.conv_mapping(x)
         x = self.features(x)
         x = self.classifier(x[:, -1, :])
