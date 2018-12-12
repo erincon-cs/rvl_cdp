@@ -80,7 +80,6 @@ class Trainer:
 
                 running_loss += loss
 
-                self.writer.add_scalar("training loss", running_loss, minibatch_i * i)
 
                 end = time.time()
                 running_time += (end - start)
@@ -89,6 +88,9 @@ class Trainer:
                 avg_mb_time = running_time / (minibatch_i + 1)
                 sys.stdout.write("\r" + "running loss: {0:.5f}".format(avg_loss) + \
                                  " - average time minibatch: {0:.2f}s".format(avg_mb_time))
+
+                self.writer.add_scalar("training loss", avg_loss, minibatch_i * i)
+
                 sys.stdout.flush()
 
             print("\nEpoch {} loss: {}".format(i, np.mean(training_loss)))
