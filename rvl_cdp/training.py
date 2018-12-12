@@ -80,7 +80,6 @@ class Trainer:
 
                 running_loss += loss
 
-
                 end = time.time()
                 running_time += (end - start)
 
@@ -89,14 +88,17 @@ class Trainer:
                 sys.stdout.write("\r" + "running loss: {0:.5f}".format(avg_loss) + \
                                  " - average time minibatch: {0:.2f}s".format(avg_mb_time))
 
+                if self.valid_dataset:
+                    accuracy, valid_loss = self.evaluate(self.valid_dataset)
+
+                    self.writer.add_scalar("valid_loss", valid_loss, minibatch_i * i)
+                    self.writer.add_scalar("valid_accuracy", accuracy, minibatch_i * i)
+
                 self.writer.add_scalar("training loss", avg_loss, minibatch_i * i)
 
                 sys.stdout.flush()
 
             print("\nEpoch {} loss: {}".format(i, np.mean(training_loss)))
-
-            if self.valid_dataset:
-                self.evaluate(self.valid_dataset)
 
     def evaluate(self, dataset, data_loader=None, minibatch_size=64):
         if not self.trained:
@@ -108,21 +110,29 @@ class Trainer:
 
         print("Evaluating on {} examples".format(len(data_loader)))
 
+        criterion = nn.CrossEntropyLoss()
+
         if torch.cuda.is_available():
             self.model.cuda()
 
         y = []
         y_true = []
 
-        running_time = 0
+        running_time, avg_loss = 0, 0
 
         with torch.no_grad():
             for minibatch_i, samples in enumerate(data_loader):
+                running_loss = 0
+
                 start = time.time()
                 images, labels = samples["image"], samples["label"]
 
                 if torch.cuda.is_available():
                     images = images.cuda()
+
+                loss = criterion(images, labels)
+                loss.backward()
+                running_loss += loss
 
                 # text = text.permute(1, 2, 0, 3)
                 preds = self.model.predict(images)
@@ -133,6 +143,7 @@ class Trainer:
                 running_time += (end - start)
 
                 avg_mb_time = running_time / (minibatch_i + 1)
+                avg_loss = running_loss / ((minibatch_i + 1) * minibatch_size)
                 sys.stdout.write("\r" + " - average time minibatch: {0:.2f}s".format(avg_mb_time))
                 sys.stdout.flush()
                 y.append(preds)
@@ -146,3 +157,5 @@ class Trainer:
             if accuracy > self.max_score:
                 self.max_score = accuracy
                 self.model.save("best_model.model")
+
+            return accuracy, avg_loss
