@@ -88,12 +88,6 @@ class Trainer:
                 sys.stdout.write("\r" + "running loss: {0:.5f}".format(avg_loss) + \
                                  " - average time minibatch: {0:.2f}s".format(avg_mb_time))
 
-                if self.valid_dataset:
-                    accuracy, valid_loss = self.evaluate(self.valid_dataset)
-
-                    self.writer.add_scalar("valid_loss", valid_loss, minibatch_i * i)
-                    self.writer.add_scalar("valid_accuracy", accuracy, minibatch_i * i)
-
                 self.writer.add_scalar("training loss", avg_loss, minibatch_i * i)
 
                 sys.stdout.flush()
