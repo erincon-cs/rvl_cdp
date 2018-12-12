@@ -19,7 +19,7 @@ class DenseNet121(nn.Module):
     def __call__(self, x, *args, **kwargs):
         x = self.conv_mapping(x)
         x = self.features(x)
-        x = self.classifier(x[:,-1,:])
+        x = self.classifier(x[:, -1, :])
 
         return x
 
