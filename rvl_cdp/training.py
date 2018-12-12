@@ -130,7 +130,7 @@ class Trainer:
                 if torch.cuda.is_available():
                     images = images.cuda()
                     labels = labels.cuda()
-                    
+
                 output = self.model(images)
 
                 loss = criterion(output, labels)
@@ -139,7 +139,7 @@ class Trainer:
                 # text = text.permute(1, 2, 0, 3)
                 preds = self.model.predict(images)
 
-                y_true.append(labels.numpy())
+                y_true.append(labels.cpu().numpy())
 
                 end = time.time()
                 running_time += (end - start)
