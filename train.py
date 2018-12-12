@@ -11,6 +11,15 @@ def check_exist_path(path):
         raise ValueError("Path {} does not exist".format(path))
 
 
+def summary_path_path(arg):
+    arg = arg.lower()
+
+    if arg == "none":
+        return None
+    else:
+        return arg
+
+
 def main():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--model", default="dn121")
@@ -23,6 +32,7 @@ def main():
                             help="Directory path to the labels")
     arg_parser.add_argument("--num-workers", default=3, type=int,
                             help="The number of workers to use in the DataLoader")
+    arg_parser.add_argument("--summary-path", default="none", type=summary_path_path)
     args = arg_parser.parse_args()
 
     Dataset = get_dataset("rvlcdip")
@@ -40,7 +50,7 @@ def main():
 
     Model = get_model(args.model)
     model = Model()
-    trainer = Trainer(model, train_dataset, valid_dataset, test_dataset)
+    trainer = Trainer(model, train_dataset, valid_dataset, test_dataset, summary_path=args.summary_path)
     trainer.fit()
     trainer.evaluate(test_dataset)
 
