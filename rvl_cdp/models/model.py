@@ -24,4 +24,4 @@ class DenseNet121(nn.Module):
         return x
 
     def save(self, path):
-        torch.save(self..state_dict(), path)
+        torch.save(self.state_dict(), path)
