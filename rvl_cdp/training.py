@@ -129,10 +129,11 @@ class Trainer:
 
                 if torch.cuda.is_available():
                     images = images.cuda()
+                    labels = labels.cuda()
+                    
                 output = self.model(images)
 
                 loss = criterion(output, labels)
-                loss.backward()
                 running_loss += loss
 
                 # text = text.permute(1, 2, 0, 3)
