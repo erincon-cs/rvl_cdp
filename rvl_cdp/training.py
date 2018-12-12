@@ -21,7 +21,8 @@ class Trainer:
 
         self.max_score = 0
 
-    def fit(self, nb_epochs=10, learning_rate=0.001, minibatch_size=64, verbose=True):
+    def fit(self, nb_epochs=10, learning_rate=0.001,
+            num_workers=3, minibatch_size=64, verbose=True):
         self.trained = True
 
         network_optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
@@ -30,7 +31,7 @@ class Trainer:
         running_loss = 0.0
         running_time = 0.0
         data_loader = DataLoader(self.training_dataset, batch_size=minibatch_size,
-                                 shuffle=True, num_workers=0)
+                                 shuffle=True, num_workers=num_workers)
 
         if torch.cuda.is_available():
             self.model.cuda()
