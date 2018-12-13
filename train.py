@@ -49,28 +49,9 @@ def main():
     valid_labels = os.path.join(args.labels, "val.txt")
     test_labels = os.path.join(args.labels, "test.txt")
 
-    transforms = {
-        "train": Compose([
-            Normalization(),
-            Resize(),
-            RandomImageCrop,
-            ToTensor()
-        ]),
-        "valid": Compose([
-            Normalization(),
-            Resize(),
-            ToTensor()
-        ]),
-        "test": Compose([
-            Normalization(),
-            Resize(),
-            ToTensor()
-        ])
-    }
-
-    train_dataset = Dataset(images_path=args.images, labels_path=train_labels, transforms=transforms["train"])
-    valid_dataset = Dataset(images_path=args.images, labels_path=valid_labels, transforms=transforms["valid"])
-    test_dataset = Dataset(images_path=args.images, labels_path=test_labels, transforms=transforms["test"])
+    train_dataset = Dataset(images_path=args.images, labels_path=train_labels)
+    valid_dataset = Dataset(images_path=args.images, labels_path=valid_labels)
+    test_dataset = Dataset(images_path=args.images, labels_path=test_labels)
 
     Model = get_model(args.model)
     model = Model()
