@@ -4,6 +4,9 @@ import os
 from rvl_cdp.training import Trainer
 from rvl_cdp.models.factory import get_model
 from rvl_cdp.data.factory import get_dataset
+from torchvision.transforms import Compose
+from rvl_cdp.data.dataset import Resize, ToTensor, \
+    Normalization, RandomImageCrop
 
 
 def check_exist_path(path):
@@ -46,9 +49,30 @@ def main():
     valid_labels = os.path.join(args.labels, "val.txt")
     test_labels = os.path.join(args.labels, "test.txt")
 
-    train_dataset = Dataset(images_path=args.images, labels_path=train_labels)
-    valid_dataset = Dataset(images_path=args.images, labels_path=valid_labels)
-    test_dataset = Dataset(images_path=args.images, labels_path=test_labels)
+    transforms = {
+        "train": Compose([
+            Normalization(),
+            Resize(),
+            RandomImageCrop,
+            ToTensor()
+        ]),
+        "valid": Compose([
+            Normalization(),
+            Resize(),
+            ToTensor()
+        ]),
+        "test": Compose([
+            Normalization(),
+            Resize(),
+            ToTensor()
+        ])
+    }
+    datasets = [("train", train_labels), ("valid", valid_labels), ("test", test_labels)]
+
+
+    train_dataset = Dataset(images_path=args.images, labels_path=train_labels, transforms=transforms["train"])
+    valid_dataset = Dataset(images_path=args.images, labels_path=valid_labels, transforms=transforms["valid"])
+    test_dataset = Dataset(images_path=args.images, labels_path=test_labels, transforms=transforms["test"])
 
     Model = get_model(args.model)
     model = Model()

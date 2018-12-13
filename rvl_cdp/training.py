@@ -138,6 +138,7 @@ class Trainer:
 
                 # text = text.permute(1, 2, 0, 3)
                 preds = self.model.predict(images)
+                print(preds)
 
                 y_true.append(labels.cpu().numpy())
 
