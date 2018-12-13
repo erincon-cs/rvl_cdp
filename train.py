@@ -32,6 +32,8 @@ def main():
                             help="Directory path to the labels")
     arg_parser.add_argument("--num-workers", default=3, type=int,
                             help="The number of workers to use in the DataLoader")
+    arg_parser.add_argument("--lr", default=0.0001, type=float, help="Learning rate")
+    arg_parser.add_argument("--mb-size", default=64, type=int, help='Minibatch size')
     arg_parser.add_argument("--summary-path", default="none", type=summary_path_path)
     args = arg_parser.parse_args()
 
@@ -51,7 +53,7 @@ def main():
     Model = get_model(args.model)
     model = Model()
     trainer = Trainer(model, train_dataset, valid_dataset, test_dataset, summary_path=args.summary_path)
-    trainer.fit()
+    trainer.fit(learning_rate=args.lr, minibatch_size=args.mb_size)
     trainer.evaluate(test_dataset)
 
 

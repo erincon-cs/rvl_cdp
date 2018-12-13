@@ -32,7 +32,7 @@ class Trainer:
 
         self.writer = SummaryWriter(summary_path)
 
-    def fit(self, nb_epochs=10, learning_rate=0.001,
+    def fit(self, nb_epochs=10, learning_rate=0.0001,
             num_workers=3, minibatch_size=64, verbose=True):
         self.trained = True
 
