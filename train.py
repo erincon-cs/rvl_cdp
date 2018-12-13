@@ -67,8 +67,6 @@ def main():
             ToTensor()
         ])
     }
-    datasets = [("train", train_labels), ("valid", valid_labels), ("test", test_labels)]
-
 
     train_dataset = Dataset(images_path=args.images, labels_path=train_labels, transforms=transforms["train"])
     valid_dataset = Dataset(images_path=args.images, labels_path=valid_labels, transforms=transforms["valid"])
@@ -80,6 +78,5 @@ def main():
     trainer.fit(learning_rate=args.lr, minibatch_size=args.mb_size)
     trainer.evaluate(test_dataset)
 
-
 if __name__ == '__main__':
-    main()
+        main()
