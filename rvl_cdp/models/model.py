@@ -39,6 +39,7 @@ class DenseNet121(BaseModel):
         self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
         self.features = nn.Sequential(*list(densenet121(pretrained=pretrained).children())[:-1])
         self.classifier = nn.Linear(8, self.nb_classes)
+        self.softmax = nn.Softmax()
 
     def forward(self, x):
         x = self.conv_mapping(x)
@@ -46,3 +47,11 @@ class DenseNet121(BaseModel):
         x = self.classifier(x[:, -1, :])
 
         return x
+
+    def predict(self, x):
+        preds = self.forward(x).cpu().numpy()
+        preds = self.softmax(preds)
+
+        preds = np.argmax(preds, axis=1)
+
+        return preds
