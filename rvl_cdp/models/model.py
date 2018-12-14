@@ -17,8 +17,8 @@ class BaseModel(nn.Module):
         self.embedding.weight.requires_grad = not freeze
 
     def predict(self, x):
-        preds = self.forward(x).cpu().numpy()
-        preds = self.softmax(preds)
+        preds = self.forward(x).cpu()
+        preds = self.softmax(preds).numpy()
 
         preds = np.argmax(preds, axis=1)
 
