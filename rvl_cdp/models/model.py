@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+import tensorflow as tf
+import tensorflow_probability as tfp
 
 from torchvision.models import densenet121
 
@@ -49,8 +51,8 @@ class DenseNet121(BaseModel):
         return x
 
     def predict(self, x):
-        preds = self.forward(x).cpu().numpy()
-        preds = self.softmax(preds)
+        preds = self.forward(x).cpu()
+        preds = self.softmax(preds).cpu()
 
         preds = np.argmax(preds, axis=1)
 
