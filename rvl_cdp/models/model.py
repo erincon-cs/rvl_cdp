@@ -49,7 +49,7 @@ class DenseNet121(BaseModel):
 
     def predict(self, x):
         preds = self.forward(x).cpu()
-        preds = self.softmax(preds).numpy()
+        preds = self.softmax(preds, dim=1).numpy()
 
         preds = np.argmax(preds, axis=1)
 
