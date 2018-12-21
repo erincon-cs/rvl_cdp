@@ -154,6 +154,8 @@ class Trainer:
             y = np.hstack(y)
             y_true = np.hstack(y_true)
 
+            print(y)
+            print(y_true)
             accuracy = accuracy_score(y, y_true)
 
             print("\nAccuracy: {0:.2f}".format(accuracy))
