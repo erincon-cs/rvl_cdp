@@ -151,8 +151,8 @@ class Trainer:
                 y.append(preds)
 
             y = np.hstack(y)
-            print(y)
             y_true = np.hstack(y_true)
+            y_true = y_true.argmax(axis=1)
             accuracy = accuracy_score(y, y_true)
 
             print("\nAccuracy: {0:.2f}".format(accuracy))
