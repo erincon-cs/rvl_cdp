@@ -56,7 +56,7 @@ def main():
     Model = get_model(args.model)
     model = Model()
 
-    trainer = Trainer(model, train_dataset, valid_dataset, test_dataset, summary_path=args.summary_path)
+    trainer = Trainer(model, train_dataset, valid_dataset, test_dataset, summavry_path=args.summary_path)
     trainer.fit(learning_rate=args.lr, minibatch_size=args.mb_size)
     trainer.evaluate(test_dataset)
 
