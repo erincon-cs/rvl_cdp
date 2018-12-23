@@ -68,8 +68,7 @@ class Trainer:
                     labels = labels.cuda()
 
                 labels = Variable(labels)
-
-                loss = criterion(output, labels)
+                loss = criterion(output, labels.argmax(dim=1))
 
                 loss.backward()
                 network_optimizer.step()
@@ -89,8 +88,9 @@ class Trainer:
                                  " - average time minibatch: {0:.2f}s".format(avg_mb_time))
 
                 self.writer.add_scalar("training loss", avg_loss, minibatch_i * i)
-
                 sys.stdout.flush()
+                accuracy, valid_loss = self.evaluate(self.test_dataset)
+
 
             if self.valid_dataset:
                 accuracy, valid_loss = self.evaluate(self.valid_dataset)
@@ -133,7 +133,7 @@ class Trainer:
 
                 output = self.model(images)
 
-                loss = criterion(output, labels)
+                loss = criterion(output, labels.argmax(dim=1))
                 running_loss += loss
 
                 # text = text.permute(1, 2, 0, 3)
@@ -149,7 +149,7 @@ class Trainer:
                 sys.stdout.write("\r" + " - average time minibatch: {0:.2f}s".format(avg_mb_time))
                 sys.stdout.flush()
                 y.append(preds)
-                
+
             y = np.hstack(y)
             y_true = np.hstack(y_true)
 

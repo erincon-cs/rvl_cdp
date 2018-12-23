@@ -1,9 +1,16 @@
 import torch
+import torch.nn.functional as F
+
 import numpy as np
 from torchvision.models import densenet121
 
 import torch.nn as nn
 import torch.distributions as tdist
+
+
+class Flatten(nn.Module):
+    def forward(self, x):
+        return x.view(x.size()[0], -1)
 
 
 class BaseModel(nn.Module):
@@ -55,14 +62,19 @@ class DenseNet121(BaseModel):
         self.pretrained = pretrained
 
         self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
-        self.features = nn.Sequential(*list(densenet121(pretrained=pretrained).children())[:-1])
-        self.classifier = nn.Linear(8, self.nb_classes)
+        net = densenet121(pretrained=pretrained)
+        self.features = nn.Sequential(*list(net.children())[:-1])
+        self.classifier = nn.Linear(net.classifier.in_features, self.nb_classes)
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         x = self.conv_mapping(x)
         x = self.features(x)
-        x = self.classifier(x[:, -1, :])
+
+        x = F.relu(x, inplace=True)
+        x = F.avg_pool2d(x, kernel_size=7).view(x.size(0), -1)
+
+        x = self.classifier(x)
 
         return x
 
