@@ -89,14 +89,12 @@ class Trainer:
 
                 self.writer.add_scalar("training loss", avg_loss, minibatch_i * i)
                 sys.stdout.flush()
-                accuracy, valid_loss = self.evaluate(self.test_dataset)
 
+        if self.valid_dataset:
+            accuracy, valid_loss = self.evaluate(self.valid_dataset)
 
-            if self.valid_dataset:
-                accuracy, valid_loss = self.evaluate(self.valid_dataset)
-
-                self.writer.add_scalar("valid_loss", valid_loss, i)
-                self.writer.add_scalar("valid_accuracy", accuracy, i)
+            self.writer.add_scalar("valid_loss", valid_loss, i)
+            self.writer.add_scalar("valid_accuracy", accuracy, i)
 
             print("\nEpoch {} loss: {}".format(i, np.mean(training_loss)))
 
