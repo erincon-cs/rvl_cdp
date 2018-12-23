@@ -139,7 +139,7 @@ class Trainer:
                 # text = text.permute(1, 2, 0, 3)
                 preds = self.model.predict(images)
 
-                y_true.append(labels.cpu().argmax().numpy())
+                y_true.append(labels.cpu().argmax(dim=1).numpy())
 
                 end = time.time()
                 running_time += (end - start)
@@ -149,13 +149,10 @@ class Trainer:
                 sys.stdout.write("\r" + " - average time minibatch: {0:.2f}s".format(avg_mb_time))
                 sys.stdout.flush()
                 y.append(preds)
-            print(y)
-            print(y_true)
+                
             y = np.hstack(y)
             y_true = np.hstack(y_true)
 
-            print(y)
-            print(y_true)
             accuracy = accuracy_score(y, y_true)
 
             print("\nAccuracy: {0:.2f}".format(accuracy))
