@@ -1,7 +1,8 @@
-from rvl_cdp.models.model import DenseNet121
+from rvl_cdp.models.model import DenseNet121, BayesianCNN
 
 _models = {
-    "dn121": DenseNet121
+    "dn121": DenseNet121,
+    "bcnn": BayesianCNN
 }
 
 

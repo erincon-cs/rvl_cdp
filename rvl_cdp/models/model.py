@@ -44,13 +44,85 @@ class Convolution2DReparameterization(nn.Module):
 
         self.normal = tdist.Normal(torch.tensor([0.0]), torch.tensor([1.0]))
 
-    def forward(self, *input):
-        loc = self.loc(input)
-        scale = self.loc(input)
+    def forward(self, x):
+        loc = self.loc(x)
+        scale = self.scale(x)
 
-        epsilon = self.normal.sample(loc.Size())
+        epsilon = self.normal.sample(loc.size()).squeeze()
+        kl = torch.distributions.kl.kl_divergence(tdist.Normal(loc, scale), self.normal)
 
-        return (loc + scale) * epsilon
+        return (loc + scale) * epsilon, kl
+
+
+class LinearReparameterzation(nn.Module):
+    def __init__(self, *args, **kwargs):
+        super(LinearReparameterzation, self).__init__()
+
+        self.mean = nn.Linear(*args, **kwargs)
+        self.var = nn.Linear(*args, **kwargs)
+
+        self.normal = tdist.Normal(torch.tensor([0.0]), torch.tensor([1.0]))
+
+    def forward(self, x):
+        loc = self.mean(x)
+        scale = self.var(x)
+
+        epsilon = self.normal.sample(loc.size()).squeeze()
+
+        kl = torch.distributions.kl.kl_divergence(tdist.Normal(loc, scale), self.normal)
+
+        return (loc + scale) * epsilon, kl
+
+
+class BayesianCNN(BaseModel):
+    def __init__(self, nb_classes=16):
+        super(BayesianCNN, self).__init__(name="BayesianCNN")
+
+        self.nb_classes = nb_classes
+
+        self.conv1 = Convolution2DReparameterization(1, 200, kernel_size=(3, 3))
+        self.activation = nn.PReLU()
+        self.max_pooling = nn.MaxPool2d(kernel_size=(3, 3))
+
+        self.conv2 = Convolution2DReparameterization(200, 200, kernel_size=(3, 3))
+        self.activation_2 = nn.PReLU()
+        self.max_pooling_2 = nn.MaxPool2d(kernel_size=(3, 3))
+
+        self.conv3 = Convolution2DReparameterization(200, 100, kernel_size=(3, 3))
+        self.activation_3 = nn.PReLU()
+        self.max_pooling_3 = nn.MaxPool2d(kernel_size=(3, 3))
+
+        self.classifier = LinearReparameterzation(6400, self.nb_classes)
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self, x):
+        kls = []
+
+        x, kl = self.conv1(x)
+        kls.append(kl)
+
+        x = self.activation(x)
+        x = self.max_pooling(x)
+
+        # 2
+        x, kl = self.conv2(x)
+        kls.append(kl)
+
+        x = self.activation_2(x)
+        x = self.max_pooling_2(x)
+        # 3
+        x, kl = self.conv3(x)
+        kls.append(kl)
+
+        x = self.activation_3(x)
+        x = self.max_pooling_3(x)
+
+        x = Flatten()(x)
+
+        x, kl = self.classifier(x)
+        kls.append(kl)
+
+        return x, kls
 
 
 class DenseNet121(BaseModel):
