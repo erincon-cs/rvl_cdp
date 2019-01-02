@@ -31,6 +31,13 @@ class BaseModel(nn.Module):
 
         return preds
 
+    def _freeze_layers(self, model):
+        # freeze layers
+        for param in model.parameters():
+            param.requires_grad = False
+
+        return model
+
     def save(self, path):
         torch.save(self.state_dict(), path)
 
@@ -125,8 +132,37 @@ class BayesianCNN(BaseModel):
         return x, kls
 
 
-class DenseNet121(BaseModel):
+class PretrainedBCNN(BaseModel):
     def __init__(self, nb_classes=16, image_shape=(256, 256), pretrained=True):
+        super(PretrainedBCNN, self).__init__("PretrainedBCNN")
+
+        self.nb_classes = nb_classes
+        self.imgae_shape = image_shape
+        self.pretrained = pretrained
+
+        self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
+        net = densenet121(pretrained=pretrained)
+        net = self._freeze_layers(net)
+
+        self.features = nn.Sequential(*list(net.children())[:-1])
+        self.classifier = LinearReparameterzation(net.classifier.in_features, self.nb_classes)
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self, x):
+        x = self.conv_mapping(x)
+        x = self.features(x)
+
+        x = F.relu(x, inplace=True)
+        x = F.avg_pool2d(x, kernel_size=7).view(x.size(0), -1)
+
+        x = self.classifier(x)
+
+        return x
+
+
+class DenseNet121(BaseModel):
+    def __init__(self, nb_classes=16, image_shape=(256, 256), pretrained=True,
+                 feature_extraction_only=False):
         super(DenseNet121, self).__init__("DenseNet121")
 
         self.nb_classes = nb_classes
@@ -135,6 +171,10 @@ class DenseNet121(BaseModel):
 
         self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
         net = densenet121(pretrained=pretrained)
+
+        if feature_extraction_only:
+            net = self._freeze_layers(net)
+
         self.features = nn.Sequential(*list(net.children())[:-1])
         self.classifier = nn.Linear(net.classifier.in_features, self.nb_classes)
         self.softmax = nn.Softmax(dim=1)
@@ -150,10 +190,4 @@ class DenseNet121(BaseModel):
 
         return x
 
-    def predict(self, x):
-        preds = self.forward(x).cpu()
-        preds = self.softmax(preds).numpy()
 
-        preds = np.argmax(preds, axis=1)
-
-        return preds
