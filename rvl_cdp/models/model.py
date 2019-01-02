@@ -76,6 +76,11 @@ class LinearReparameterzation(nn.Module):
 
         epsilon = self.normal.sample(loc.size()).squeeze()
 
+        if torch.cuda.is_available():
+            loc = loc.cuda()
+            scale = scale.cuda()
+            epsilon = epsilon.cuda()
+            
         kl = torch.distributions.kl.kl_divergence(tdist.Normal(loc, scale), self.normal)
 
         return (loc + scale) * epsilon, kl
@@ -189,5 +194,3 @@ class DenseNet121(BaseModel):
         x = self.classifier(x)
 
         return x
-
-
