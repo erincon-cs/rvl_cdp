@@ -62,6 +62,9 @@ class Trainer:
 
                 if torch.cuda.is_available():
                     image = image.cuda()
+                    mean = torch.tensor([0.0]).cuda()
+                    var = torch.tensor([1.0]).cuda()
+
                 network_optimizer.zero_grad()
 
                 self.model.train()
@@ -73,7 +76,7 @@ class Trainer:
                     output, kl = output
 
                     kl = sum([nn.KLDivLoss()(_kl,
-                                             tdist.Normal(torch.tensor([0.0]), torch.tensor([1.0]))
+                                             tdist.Normal(mean, var)
                                              .sample(_kl.size()).squeeze())
                               for _kl in kl])
 
@@ -85,8 +88,6 @@ class Trainer:
 
                 if kl is not None:
                     loss += kl
-
-
 
                 loss.backward()
                 network_optimizer.step()
