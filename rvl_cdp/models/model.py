@@ -67,8 +67,13 @@ class LinearReparameterzation(nn.Module):
 
         self.mean = nn.Linear(*args, **kwargs)
         self.var = nn.Linear(*args, **kwargs)
+        loc = torch.tensor([0.0])
+        scale = torch.tensor([1.0])
 
-        self.normal = tdist.Normal(torch.tensor([0.0]), torch.tensor([1.0]))
+        if torch.cuda.is_available():
+            loc, scale = loc.cuda(), scale.cuda()
+
+        self.normal = tdist.Normal(loc, scale)
 
     def forward(self, x):
         loc = self.mean(x)
@@ -80,7 +85,7 @@ class LinearReparameterzation(nn.Module):
             loc = loc.cuda()
             scale = scale.cuda()
             epsilon = epsilon.cuda()
-            
+
         kl = torch.distributions.kl.kl_divergence(tdist.Normal(loc, scale), self.normal)
 
         return (loc + scale) * epsilon, kl
