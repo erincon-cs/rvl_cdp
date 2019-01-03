@@ -2,6 +2,8 @@ import torch
 import torch.nn.functional as F
 
 import numpy as np
+
+from torch.nn.parameter import Parameter
 from torchvision.models import densenet121
 
 import torch.nn as nn
@@ -62,33 +64,79 @@ class Convolution2DReparameterization(nn.Module):
 
 
 class LinearReparameterzation(nn.Module):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, in_features, out_features, bias=True):
         super(LinearReparameterzation, self).__init__()
 
-        self.mean = nn.Linear(*args, **kwargs)
-        self.var = nn.Linear(*args, **kwargs)
-        loc = torch.tensor([0.0])
-        scale = torch.tensor([1.0])
+        self.in_features = in_features
+        self.out_features = out_features
 
-        if torch.cuda.is_available():
-            loc, scale = loc.cuda(), scale.cuda()
+        loc_weight = torch.Tensor(out_features, in_features)
+        self.init_weight(loc_weight)
+        scale_weight = torch.Tensor(out_features, in_features)
+        self.init_weight(scale_weight)
 
-        self.normal = tdist.Normal(loc, scale)
+        self.loc_weight = Parameter(loc_weight)
+        self.scale_weight = Parameter(scale_weight)
 
-    def forward(self, x):
-        loc = self.mean(x)
-        scale = self.var(x)
-
-        epsilon = self.normal.sample(loc.size()).squeeze()
+        loc, scale = torch.tensor([0.0]), torch.tensor([1.0])
 
         if torch.cuda.is_available():
             loc = loc.cuda()
             scale = scale.cuda()
-            epsilon = epsilon.cuda()
 
-        kl = torch.distributions.kl.kl_divergence(tdist.Normal(loc, scale), self.normal)
+        self.weight_normal = tdist.Normal(loc, scale)
+        self.bias_normal = tdist.Normal(loc, scale)
 
-        return (loc + scale) * epsilon, kl
+        if bias:
+            loc_bias = torch.Tensor(out_features)
+            self.init_bias(loc_bias)
+
+            scale_bias = torch.Tensor(out_features)
+            self.init_bias(scale_bias)
+
+            self.loc_bias = Parameter(loc_bias)
+            self.scale_bias = Parameter(scale_bias)
+        else:
+            self.register_parameter('bias', None)
+
+    def init_weight(self, m):
+        torch.nn.init.xavier_uniform(m)
+
+    def init_bias(self, b):
+        torch.nn.init.constant(b, 1.0)
+
+    def forward(self, x):
+
+        epsilon_weight = self.weight_normal.sample(self.loc_weight.size()).squeeze()
+        epsilon_bias = self.bias_normal.sample(self.loc_bias.size()).squeeze()
+
+        loc_weight, scale_weight = self.loc_weight, self.scale_weight
+        loc_bias, scale_bias = self.loc_bias, self.scale_bias
+
+        if torch.cuda.is_available():
+            loc_weight, scale_weight = loc_weight.cuda(), scale_weight.cuda()
+            loc_bias, scale_bias = loc_bias.cuda(), scale_bias.cuda()
+            epsilon_weight = epsilon_weight.cuda()
+            epsilon_bias = epsilon_bias.cuda()
+
+        # log transform
+        scale_weight, scale_bias = F.softplus(scale_weight), F.softplus(scale_bias)
+        weight_normal = tdist.Normal(loc_weight, scale_weight)
+        # weight = weight_normal.sample(self.loc_weight.size())
+
+        bias_normal = tdist.Normal(loc_bias, scale_bias)
+        # bias = bias_normal.sample(self.loc_bias.size())
+
+        kl_weight = torch.distributions.kl.kl_divergence(weight_normal, self.weight_normal)
+        kl_bias = torch.distributions.kl.kl_divergence(bias_normal, self.bias_normal)
+
+        kl = kl_weight.sum(dim=-1) + kl_bias.sum(dim=-1)
+        kl /= kl_weight.size()[1]
+
+        loc = loc_weight + scale_weight * epsilon_weight
+        bias = loc_bias + scale_bias * epsilon_bias
+
+        return F.linear(x, loc, bias), kl
 
 
 class BayesianCNN(BaseModel):
@@ -143,14 +191,18 @@ class BayesianCNN(BaseModel):
 
 
 class PretrainedBCNN(BaseModel):
-    def __init__(self, nb_classes=16, image_shape=(256, 256), pretrained=True):
+    def __init__(self, nb_classes=10, image_shape=(256, 256), pretrained=True,
+                 two_dim_map=False):
+
         super(PretrainedBCNN, self).__init__("PretrainedBCNN")
 
         self.nb_classes = nb_classes
         self.imgae_shape = image_shape
         self.pretrained = pretrained
+        self.two_dim_map = two_dim_map
 
-        self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
+        if two_dim_map:
+            self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
         net = densenet121(pretrained=pretrained)
         net = self._freeze_layers(net)
 
@@ -159,15 +211,17 @@ class PretrainedBCNN(BaseModel):
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
-        x = self.conv_mapping(x)
+        if self.two_dim_map:
+            x = self.conv_mapping(x)
+
         x = self.features(x)
 
         x = F.relu(x, inplace=True)
         x = F.avg_pool2d(x, kernel_size=7).view(x.size(0), -1)
 
-        x = self.classifier(x)
+        x, kl = self.classifier(x)
 
-        return x
+        return x, kl
 
 
 class DenseNet121(BaseModel):

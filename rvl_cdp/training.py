@@ -15,10 +15,10 @@ from tensorboardX import SummaryWriter
 
 
 class Trainer:
-    def __init__(self, model, training_dataset, valid_dataset=None, test_dataset=None,
+    def __init__(self, model, train_dataset, valid_dataset=None, test_dataset=None,
                  summary_path=None):
         self.model = model.train()
-        self.training_dataset = training_dataset
+        self.training_dataset = train_dataset
         self.valid_dataset = valid_dataset
         self.test_dataset = test_dataset
         self.trained = False
@@ -51,6 +51,8 @@ class Trainer:
 
         training_loss = []
         kl = None
+        mean = torch.tensor([0.0])
+        var = torch.tensor([1.0])
 
         for i in range(1, nb_epochs + 1):
             print("Epoch: {}".format(i))
@@ -62,8 +64,8 @@ class Trainer:
 
                 if torch.cuda.is_available():
                     image = image.cuda()
-                    mean = torch.tensor([0.0]).cuda()
-                    var = torch.tensor([1.0]).cuda()
+                    mean = mean.cuda()
+                    var = var.cuda()
 
                 network_optimizer.zero_grad()
 
@@ -75,10 +77,11 @@ class Trainer:
                 if isinstance(output, tuple):
                     output, kl = output
 
-                    kl = sum([nn.KLDivLoss()(_kl,
-                                             tdist.Normal(mean, var)
-                                             .sample(_kl.size()).squeeze())
-                              for _kl in kl])
+                    # kl = sum([nn.KLDivLoss()(_kl,
+                    #                          tdist.Normal(mean, var)
+                    #                          .sample(_kl.size()).squeeze())
+                    #           for _kl in kl])
+                    print()
 
                 if torch.cuda.is_available():
                     labels = labels.cuda()
@@ -87,7 +90,7 @@ class Trainer:
                 loss = criterion(output, labels.argmax(dim=1))
 
                 if kl is not None:
-                    loss += kl
+                    loss += sum(kl)
 
                 loss.backward()
                 network_optimizer.step()
@@ -163,6 +166,7 @@ class Trainer:
 
                 avg_mb_time = running_time / (minibatch_i + 1)
                 avg_loss = running_loss / ((minibatch_i + 1) * minibatch_size)
+
                 sys.stdout.write("\r" + " - average time minibatch: {0:.2f}s".format(avg_mb_time))
                 sys.stdout.flush()
                 y.append(preds)

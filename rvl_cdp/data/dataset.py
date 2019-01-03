@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import numpy as np
 
+from collections import OrderedDict
+import rvl_cdp.data.util as data_utils
+
 from PIL import Image
 from skimage import io, transform
 from skimage.transform import rescale, resize, downscale_local_mean
@@ -10,6 +13,7 @@ from skimage.transform import rescale, resize, downscale_local_mean
 from torch.utils.data import Dataset
 from torchvision.transforms import Compose, RandomCrop, RandomHorizontalFlip, \
     RandomVerticalFlip
+
 
 def one_hot(labels, num_classes):
     """Embedding labels to one-hot form.
@@ -26,12 +30,14 @@ def one_hot(labels, num_classes):
     return y[labels]
 
 
-def read_textfile(path):
+def read_textfile(image_paths, path):
     examples = []
 
     with open(path, "r") as file:
         for line in file.readlines():
             image_path, label = line.split()
+            image_path = os.path.join(image_paths, image_path)
+
             examples.append({"path": image_path, "label": int(label)})
 
     return pd.DataFrame(examples, columns=["path", "label"])
@@ -148,17 +154,42 @@ class Normalization:
 
 
 class ToTensor:
-    def __call__(self, sample, *args, **kwargs):
+    def __call__(self, sample, unsqueeze=False, *args, **kwargs):
         image, label = sample["image"], sample['label']
         image = torch.from_numpy(image).float()
-        image = image.unsqueeze(0)
+
+        if unsqueeze:
+            image = image.unsqueeze(0)
+
+        return {"image": image, "label": label}
+
+class PermuteTensor:
+    def __init__(self, reordering):
+        self.reordering = reordering
+
+    def __call__(self, sample, *args, **kwargs):
+        image, label = sample["image"], sample['label']
+
+        image = image.permute(self.reordering)
+
+        return {"image": image, "label": label}
+
+class NPTranspose:
+    def __init__(self, reordering):
+        self.reordering = reordering
+
+    def __call__(self, sample, *args, **kwargs):
+        image, label = sample["image"], sample['label']
+
+        image = np.transpose(image, self.reordering)
 
         return {"image": image, "label": label}
 
 
-class RVLCDIPDataset(Dataset):
-    def __init__(self, images_path, labels_path, transforms=None):
-        super(RVLCDIPDataset, self).__init__()
+class BaseDataset(Dataset):
+    def __init__(self, nb_classes, images_path=None, labels_path=None, data=None, label_dict=None,
+                 transforms=None):
+        super(BaseDataset, self).__init__()
 
         if transforms is None:
             transforms = Compose([
@@ -168,22 +199,54 @@ class RVLCDIPDataset(Dataset):
             ])
 
         self.transforms = transforms
-        self.nb_classes = 16
+        self.nb_classes = nb_classes
         self.images_path = images_path
         self.labels_path = labels_path
 
-        self.data = read_textfile(labels_path)
-
-    def __len__(self):
-        return len(self.data)
+        self.label_dict = label_dict if label_dict is not None else OrderedDict()
+        self.data = data if data is not None else self.read_data()
 
     def __getitem__(self, idx):
-        image, label = self.data.path.iloc[idx], self.data.label.iloc[idx]
+        image_path, label = self.data.path.iloc[idx], self.data.label.iloc[idx]
 
-        image = io.imread(os.path.join(self.images_path, image))
+        image = io.imread(image_path)
 
         if self.transforms:
             sample = self.transforms({"image": image, "label": label})
             image, label = sample["image"], sample['label']
 
         return {"image": image, "label": one_hot(label, self.nb_classes)}
+
+    def __len__(self):
+        return len(self.data)
+
+    def read_data(self):
+        pass
+
+
+class RVLCDIPDataset(BaseDataset):
+    def __init__(self, *args, **kwargs):
+        super(RVLCDIPDataset, self).__init__(*args, nb_classes=16, **kwargs)
+
+    def read_data(self):
+        return read_textfile(self.images_path, self.labels_path)
+
+
+class CIFAR10(BaseDataset):
+    def __init__(self, *args, **kwargs):
+        transforms = Compose([
+
+            Normalization(),
+            Resize(),
+            ToTensor(),
+            PermuteTensor((2, 0, 1))
+        ])
+
+        super(CIFAR10, self).__init__(*args, nb_classes=10, transforms=transforms, **kwargs)
+
+    def read_data(self):
+        label_dict, data = data_utils.read_image_folders(self.images_path, "*.png")
+
+        self.label_dict = label_dict
+
+        return data
