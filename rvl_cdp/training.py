@@ -154,6 +154,10 @@ class Trainer:
                 output, kl = self.model(images)
 
                 loss = criterion(output, labels.argmax(dim=1))
+
+                if kl is not None:
+                    loss += sum(kl)
+
                 running_loss += loss
 
                 # text = text.permute(1, 2, 0, 3)
@@ -163,9 +167,6 @@ class Trainer:
 
                 end = time.time()
                 running_time += (end - start)
-
-                if kl is not None:
-                    loss += sum(kl)
 
                 avg_mb_time = running_time / (minibatch_i + 1)
                 avg_loss = running_loss / ((minibatch_i + 1) * minibatch_size)

@@ -201,6 +201,9 @@ class PretrainedBCNN(BaseModel):
         self.pretrained = pretrained
         self.two_dim_map = two_dim_map
 
+        self.mean = None
+        self.std = None
+
         if two_dim_map:
             self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
         net = densenet121(pretrained=pretrained)
@@ -210,7 +213,7 @@ class PretrainedBCNN(BaseModel):
         self.classifier = LinearReparameterzation(net.classifier.in_features, self.nb_classes)
         self.softmax = nn.Softmax(dim=1)
 
-    def forward(self, x):
+    def forward_features(self, x):
         if self.two_dim_map:
             x = self.conv_mapping(x)
 
@@ -218,6 +221,18 @@ class PretrainedBCNN(BaseModel):
 
         x = F.relu(x, inplace=True)
         x = F.avg_pool2d(x, kernel_size=7).view(x.size(0), -1)
+
+        return x
+
+    def forward(self, x):
+        x = self.forward_features(x)
+
+        if self.mean is None or self.std is None:
+            mean, std = x.mean(), x.std()
+        else:
+            mean, std = self.mean, self.std
+
+        x = (x - mean) / std
 
         x, kl = self.classifier(x)
 
@@ -252,4 +267,4 @@ class DenseNet121(BaseModel):
 
         x = self.classifier(x)
 
-        return x
+        return x, None
