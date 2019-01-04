@@ -81,7 +81,6 @@ class Trainer:
                     #                          tdist.Normal(mean, var)
                     #                          .sample(_kl.size()).squeeze())
                     #           for _kl in kl])
-                    print()
 
                 if torch.cuda.is_available():
                     labels = labels.cuda()
@@ -139,6 +138,7 @@ class Trainer:
         y_true = []
 
         running_time, avg_loss = 0, 0
+        kl = None
 
         with torch.no_grad():
             for minibatch_i, samples in enumerate(data_loader):
@@ -151,7 +151,7 @@ class Trainer:
                     images = images.cuda()
                     labels = labels.cuda()
 
-                output = self.model(images)
+                output, kl = self.model(images)
 
                 loss = criterion(output, labels.argmax(dim=1))
                 running_loss += loss
@@ -163,6 +163,9 @@ class Trainer:
 
                 end = time.time()
                 running_time += (end - start)
+
+                if kl is not None:
+                    loss += sum(kl)
 
                 avg_mb_time = running_time / (minibatch_i + 1)
                 avg_loss = running_loss / ((minibatch_i + 1) * minibatch_size)
