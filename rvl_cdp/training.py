@@ -75,8 +75,10 @@ class Trainer:
                     labels = labels.cuda()
 
                 labels = Variable(labels)
-                instance_liklihood = criterion(output, labels.argmax(dim=1))
-                loss = len(self.training_dataset) * instance_liklihood
+                instance_likelihood = criterion(output, labels.argmax(dim=1))
+                self.writer.add_scalar("training instance likelihood", kl, minibatch_i * i)
+
+                loss = len(self.training_dataset) * instance_likelihood
 
                 if self.model.kls is not None:
                     kl = sum(self.model.kls)
