@@ -52,8 +52,7 @@ class Trainer:
         iteration = 0
         running_loss = 0.0
 
-        mode = "training" if network_optimizer is None else "inference"
-
+        mode = "training" if network_optimizer is not None else "inference"
 
         for i in range(1, nb_epochs + 1):
             print("Epoch: {}".format(i))
