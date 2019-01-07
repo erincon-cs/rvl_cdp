@@ -43,6 +43,8 @@ class Trainer:
 
         y = []
         y_true = []
+        mean = torch.tensor([0.0])
+        var = torch.tensor([1.0])
 
         for i in range(1, nb_epochs + 1):
             print("Epoch: {}".format(i))
