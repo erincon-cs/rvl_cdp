@@ -108,7 +108,8 @@ class Trainer:
                 sys.stdout.flush()
 
                 if keep_preds:
-                    y.append(output.cpu())
+                    preds = self.model.predict(image)
+                    y.append(preds)
 
             if keep_preds:
                 y = np.hstack(y)
