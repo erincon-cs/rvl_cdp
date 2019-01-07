@@ -52,6 +52,9 @@ class Trainer:
         iteration = 0
         running_loss = 0.0
 
+        mode = "training" if network_optimizer is None else "inference"
+
+
         for i in range(1, nb_epochs + 1):
             print("Epoch: {}".format(i))
 
@@ -79,13 +82,13 @@ class Trainer:
 
                 labels = Variable(labels)
                 instance_likelihood = criterion(output, labels.argmax(dim=1))
-                self.writer.add_scalar("training instance likelihood", instance_likelihood, iteration)
+                self.writer.add_scalar("{} instance likelihood".format(mode), instance_likelihood, iteration)
 
                 loss = len(self.training_dataset) * instance_likelihood
 
                 if self.model.kls is not None:
                     kl = sum(self.model.kls)
-                    self.writer.add_scalar("training kl", kl, iteration)
+                    self.writer.add_scalar("{} kl".format(mode), kl, iteration)
 
                     loss += kl
 
@@ -107,7 +110,7 @@ class Trainer:
                 sys.stdout.write("\r" + "running loss: {0:.5f}".format(avg_loss) + \
                                  " - average time minibatch: {0:.2f}s".format(avg_mb_time))
 
-                self.writer.add_scalar("training loss", avg_loss, iteration)
+                self.writer.add_scalar("{} loss".format(mode), avg_loss, iteration)
                 sys.stdout.flush()
 
                 if keep_preds:
