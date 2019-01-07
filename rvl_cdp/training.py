@@ -86,8 +86,6 @@ class Trainer:
 
                     loss += kl
 
-
-
                 if network_optimizer is not None:
                     loss.backward()
                     network_optimizer.step()
@@ -110,7 +108,7 @@ class Trainer:
                 sys.stdout.flush()
 
                 if keep_preds:
-                    y.append(output)
+                    y.append(output.cpu())
 
             if keep_preds:
                 y = np.hstack(y)
