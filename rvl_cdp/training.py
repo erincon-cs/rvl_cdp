@@ -76,7 +76,7 @@ class Trainer:
 
                 labels = Variable(labels)
                 instance_likelihood = criterion(output, labels.argmax(dim=1))
-                self.writer.add_scalar("training instance likelihood", kl, minibatch_i * i)
+                self.writer.add_scalar("training instance likelihood", instance_likelihood, minibatch_i * i)
 
                 loss = len(self.training_dataset) * instance_likelihood
 
@@ -113,6 +113,14 @@ class Trainer:
                 y = np.hstack(y)
                 y_true = np.hstack(y_true)
 
+            if self.valid_dataset and network_optimizer is not None:
+                accuracy, valid_loss = self.evaluate(self.valid_dataset)
+
+                self.writer.add_scalar("valid_loss", valid_loss, i)
+                self.writer.add_scalar("valid_accuracy", accuracy, i)
+
+                print("\nEpoch {} loss: {}".format(i, np.mean(total_loss)))
+
         return total_loss, y, y_true
 
     def fit(self, nb_epochs=10, learning_rate=0.0001,
@@ -125,14 +133,6 @@ class Trainer:
                                  shuffle=True, num_workers=num_workers)
         training_loss, _, _ = self._data_loop(data_loader, nb_epochs, criterion, minibatch_size, network_optimizer,
                                               keep_preds=False)
-
-        if self.valid_dataset:
-            accuracy, valid_loss = self.evaluate(self.valid_dataset)
-
-            self.writer.add_scalar("valid_loss", valid_loss, i)
-            self.writer.add_scalar("valid_accuracy", accuracy, i)
-
-            print("\nEpoch {} loss: {}".format(i, np.mean(training_loss)))
 
     def evaluate(self, dataset, data_loader=None, minibatch_size=64):
         if not self.trained:
