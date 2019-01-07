@@ -46,6 +46,9 @@ class Trainer:
         mean = torch.tensor([0.0])
         var = torch.tensor([1.0])
 
+        if torch.cuda.is_available():
+            self.model.cuda()
+
         for i in range(1, nb_epochs + 1):
             print("Epoch: {}".format(i))
             running_loss = 0
@@ -116,7 +119,7 @@ class Trainer:
         data_loader = DataLoader(self.training_dataset, batch_size=minibatch_size,
                                  shuffle=True, num_workers=num_workers)
         training_loss, _, _ = self._data_loop(data_loader, nb_epochs, criterion, minibatch_size, network_optimizer,
-                                  keep_preds=False)
+                                              keep_preds=False)
 
         # running_loss = 0.0
         # running_time = 0.0
