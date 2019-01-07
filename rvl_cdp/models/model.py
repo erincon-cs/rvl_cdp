@@ -132,7 +132,7 @@ class LinearReparameterzation(nn.Module):
         kl_bias = torch.distributions.kl.kl_divergence(bias_normal, self.bias_normal)
 
         kl = kl_weight.sum(dim=-1) + kl_bias.sum(dim=-1)
-        kl /= kl_weight.size()[1]
+        # kl /= kl_weight.size()[1]
 
         loc = loc_weight + scale_weight * epsilon_weight
         bias = loc_bias + scale_bias * epsilon_bias
