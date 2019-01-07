@@ -83,10 +83,13 @@ class Trainer:
                 instance_likelihood = criterion(output, labels.argmax(dim=1))
                 self.writer.add_scalar("{} instance likelihood".format(mode), instance_likelihood, iteration)
 
-                loss = len(self.training_dataset) * instance_likelihood
+                loss = instance_likelihood
 
-                if self.model.kls is not None:
-                    kl = sum(self.model.kls)
+                if self.model.kl is not None:
+                    loss *= len(self.training_dataset)
+
+                if self.model.kl is not None:
+                    kl = sum(self.model.kl)
                     self.writer.add_scalar("{} kl".format(mode), kl, iteration)
 
                     loss += kl

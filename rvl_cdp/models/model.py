@@ -188,7 +188,7 @@ class BayesianCNN(BaseModel):
         x, kl = self.classifier(x)
         kls.append(kl)
 
-        self.kls = kls
+        self.kl = kls
 
         return x
 
@@ -238,21 +238,23 @@ class PretrainedBCNN(BaseModel):
         x = (x - mean) / std
 
         x, kl = self.classifier(x)
-        self.kls = kl
+        self.kl = kl
 
         return x
 
 
 class DenseNet121(BaseModel):
     def __init__(self, nb_classes=16, image_shape=(256, 256), pretrained=True,
-                 feature_extraction_only=False):
+                 feature_extraction_only=False, two_dim_map=False):
         super(DenseNet121, self).__init__("DenseNet121")
 
         self.nb_classes = nb_classes
         self.imgae_shape = image_shape
         self.pretrained = pretrained
+        self.two_dim_map = two_dim_map
 
-        self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
+        if self.two_dim_map:
+            self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
         net = densenet121(pretrained=pretrained)
 
         if feature_extraction_only:
@@ -263,7 +265,8 @@ class DenseNet121(BaseModel):
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
-        x = self.conv_mapping(x)
+        if self.two_dim_map:
+            x = self.conv_mapping(x)
         x = self.features(x)
 
         x = F.relu(x, inplace=True)
