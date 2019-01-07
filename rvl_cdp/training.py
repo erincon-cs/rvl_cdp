@@ -87,7 +87,9 @@ class Trainer:
                     loss += kl
 
                 loss.backward()
-                network_optimizer.step()
+
+                if network_optimizer is not None:
+                    network_optimizer.step()
 
                 loss = loss.item()
 
