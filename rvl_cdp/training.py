@@ -49,11 +49,14 @@ class Trainer:
         if torch.cuda.is_available():
             self.model.cuda()
 
+        iteration = 0
+        running_loss = 0.0
+
         for i in range(1, nb_epochs + 1):
             print("Epoch: {}".format(i))
-            running_loss = 0
 
             for minibatch_i, samples in enumerate(data_loader):
+                iteration += 1
                 start = time.time()
                 image, labels = samples["image"], samples["label"]
 
@@ -76,13 +79,13 @@ class Trainer:
 
                 labels = Variable(labels)
                 instance_likelihood = criterion(output, labels.argmax(dim=1))
-                self.writer.add_scalar("training instance likelihood", instance_likelihood, minibatch_i * i)
+                self.writer.add_scalar("training instance likelihood", instance_likelihood, iteration)
 
                 loss = len(self.training_dataset) * instance_likelihood
 
                 if self.model.kls is not None:
                     kl = sum(self.model.kls)
-                    self.writer.add_scalar("training kl", kl, minibatch_i * i)
+                    self.writer.add_scalar("training kl", kl, iteration)
 
                     loss += kl
 
@@ -104,7 +107,7 @@ class Trainer:
                 sys.stdout.write("\r" + "running loss: {0:.5f}".format(avg_loss) + \
                                  " - average time minibatch: {0:.2f}s".format(avg_mb_time))
 
-                self.writer.add_scalar("training loss", avg_loss, minibatch_i * i)
+                self.writer.add_scalar("training loss", avg_loss, iteration)
                 sys.stdout.flush()
 
                 if keep_preds:
