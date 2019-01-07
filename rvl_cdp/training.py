@@ -127,7 +127,7 @@ class Trainer:
 
                 print("\nEpoch {} loss: {}".format(i, np.mean(total_loss)))
 
-    return total_loss, y, y_true
+        return total_loss, y, y_true
 
 
 def fit(self, nb_epochs=10, learning_rate=0.0001,
