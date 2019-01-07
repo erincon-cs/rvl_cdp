@@ -20,6 +20,7 @@ class BaseModel(nn.Module):
         super(BaseModel, self).__init__()
 
         self.name = name
+        self.kl = None
 
     def set_embeddings(self, vectors, freeze=True):
         self.embedding.weight = nn.Parameter(vectors)
@@ -187,7 +188,9 @@ class BayesianCNN(BaseModel):
         x, kl = self.classifier(x)
         kls.append(kl)
 
-        return x, kls
+        self.kls = kls
+
+        return x
 
 
 class PretrainedBCNN(BaseModel):
@@ -235,8 +238,9 @@ class PretrainedBCNN(BaseModel):
         x = (x - mean) / std
 
         x, kl = self.classifier(x)
+        self.kls = kl
 
-        return x, kl
+        return x
 
 
 class DenseNet121(BaseModel):
@@ -267,4 +271,4 @@ class DenseNet121(BaseModel):
 
         x = self.classifier(x)
 
-        return x, None
+        return x

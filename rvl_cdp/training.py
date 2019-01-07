@@ -50,7 +50,6 @@ class Trainer:
             self.model.cuda()
 
         training_loss = []
-        kl = None
         mean = torch.tensor([0.0])
         var = torch.tensor([1.0])
 
@@ -72,24 +71,15 @@ class Trainer:
                 self.model.train()
                 output = self.model(image)
 
-                # @TODO find a better way of handilign this or of refactoring so a tuple isnt returned
-                #
-                if isinstance(output, tuple):
-                    output, kl = output
-
-                    # kl = sum([nn.KLDivLoss()(_kl,
-                    #                          tdist.Normal(mean, var)
-                    #                          .sample(_kl.size()).squeeze())
-                    #           for _kl in kl])
-
                 if torch.cuda.is_available():
                     labels = labels.cuda()
 
                 labels = Variable(labels)
-                loss = criterion(output, labels.argmax(dim=1))
 
-                if kl is not None:
-                    loss += sum(kl)
+                loss = len(self.training_dataset) * criterion(output, labels.argmax(dim=1))
+
+                if self.model.kls is not None:
+                    loss += sum(self.model.kls)
 
                 loss.backward()
                 network_optimizer.step()
@@ -138,7 +128,6 @@ class Trainer:
         y_true = []
 
         running_time, avg_loss = 0, 0
-        kl = None
 
         with torch.no_grad():
             for minibatch_i, samples in enumerate(data_loader):
@@ -155,8 +144,8 @@ class Trainer:
 
                 loss = criterion(output, labels.argmax(dim=1))
 
-                if kl is not None:
-                    loss += sum(kl)
+                if self.model.kls is not None:
+                    loss += sum(self.model.kls)
 
                 running_loss += loss
 

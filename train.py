@@ -16,6 +16,12 @@ def summary_path_path(arg):
         return arg
 
 
+def boolean(arg):
+    if arg in ("y", "1", ):
+        return True
+    else:
+        return False
+
 _dataset_kwargs = {
     "rvlcdip": {"two_dim_map": True},
     "cifar10": {}
@@ -42,6 +48,7 @@ def main():
                             help="The number of workers to use in the DataLoader")
     arg_parser.add_argument("--lr", default=0.0001, type=float, help="Learning rate")
     arg_parser.add_argument("--mb-size", default=64, type=int, help='Minibatch size')
+    arg_parser.add_argument("--stats", default="")
     arg_parser.add_argument("--summary-path", default="none", type=summary_path_path)
     args = arg_parser.parse_args()
 
