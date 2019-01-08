@@ -5,10 +5,9 @@ import numpy as np
 import torch
 
 from sklearn.metrics import accuracy_score
+
 from torch import optim, nn as nn
 from torch.utils.data import DataLoader
-import torch.distributions as tdist
-
 from torch.autograd import Variable
 
 from tensorboardX import SummaryWriter
@@ -89,7 +88,7 @@ class Trainer:
                     loss *= len(self.training_dataset)
 
                 if self.model.kl is not None:
-                    kl = sum(self.model.kl)
+                    kl = self.model.kl
                     self.writer.add_scalar("{} kl".format(mode), kl, iteration)
 
                     loss += kl

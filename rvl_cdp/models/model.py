@@ -1,11 +1,11 @@
 import torch
 import torch.nn.functional as F
+import torch.nn as nn
+import torch.distributions as tdist
 
 import numpy as np
 
 from torchvision.models import densenet121
-
-import torch.nn as nn
 
 from rvl_cdp.models.layers import LinearReparameterzation, Convolution2DReparameterization
 
@@ -143,6 +143,7 @@ class PretrainedBCNN(BaseModel):
         x = (x - mean) / (2 * std)
 
         x, kl = self.classifier(x)
+
         self.kl = kl
 
         return x

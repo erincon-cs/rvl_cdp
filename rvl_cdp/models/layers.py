@@ -28,6 +28,10 @@ class LinearReparameterzation(nn.Module):
         self.weight_normal = tdist.Normal(loc, scale)
         self.bias_normal = tdist.Normal(loc, scale)
 
+        self.kl_loss = nn.KLDivLoss()
+        self.kl_loss_target_weights = tdist.Normal(torch.Tensor([0.0]), torch.Tensor([1.0]))
+        self.kl_loss_target_bias = tdist.Normal(torch.Tensor([0.0]), torch.Tensor([1.0]))
+
         if bias:
             loc_bias = torch.Tensor(out_features)
             self.init_bias(loc_bias)
@@ -62,16 +66,19 @@ class LinearReparameterzation(nn.Module):
 
         # log transform
         scale_weight, scale_bias = F.softplus(scale_weight), F.softplus(scale_bias)
-        weight_normal = tdist.Normal(loc_weight, scale_weight)
+        # weight_normal = tdist.Normal(loc_weight, scale_weight)
         # weight = weight_normal.sample(self.loc_weight.size())
 
-        bias_normal = tdist.Normal(loc_bias, scale_bias)
+        # bias_normal = tdist.Normal(loc_bias, scale_bias)
         # bias = bias_normal.sample(self.loc_bias.size())
+        kl_weight = self.kl_loss(scale_weight, self.kl_loss_target_weights.sample(scale_weight.size()).squeeze())
+        kl_bias = self.kl_loss(scale_bias, self.kl_loss_target_bias.sample(scale_bias.size()).squeeze())
+        # kl_weight = torch.distributions.kl.kl_divergence(weight_normal, self.weight_normal)
+        # kl_bias = torch.distributions.kl.kl_divergence(bias_normal, self.bias_normal)
 
-        kl_weight = torch.distributions.kl.kl_divergence(weight_normal, self.weight_normal)
-        kl_bias = torch.distributions.kl.kl_divergence(bias_normal, self.bias_normal)
+        kl = kl_weight + kl_bias
 
-        kl = kl_weight.sum(dim=-1) + kl_bias.sum(dim=-1)
+        # kl = kl_weight.sum(dim=-1) + kl_bias.sum(dim=-1)
         # kl /= kl_weight.size()[1]
 
         loc = loc_weight + scale_weight * epsilon_weight
