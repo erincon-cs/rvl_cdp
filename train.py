@@ -49,6 +49,7 @@ def main():
     arg_parser.add_argument("--lr", default=0.0001, type=float, help="Learning rate")
     arg_parser.add_argument("--mb-size", default=64, type=int, help='Minibatch size')
     arg_parser.add_argument("--stats", default="")
+    arg_parser.add_argument("--epochs", default=20, type=int)
     arg_parser.add_argument("--summary-path", default="none", type=summary_path_path)
     args = arg_parser.parse_args()
 
@@ -59,7 +60,7 @@ def main():
     model = Model(**model_kwwargs)
 
     trainer = Trainer(model, summary_path=args.summary_path, **datasets)
-    trainer.fit(learning_rate=args.lr, minibatch_size=args.mb_size)
+    trainer.fit(learning_rate=args.lr, minibatch_size=args.mb_size, nb_epochs=args.epochs)
     trainer.evaluate(datasets["test_dataset"])
 
 
