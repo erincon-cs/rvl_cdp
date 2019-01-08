@@ -24,7 +24,7 @@ class LinearReparameterzation(nn.Module):
         if torch.cuda.is_available():
             loc = loc.cuda()
             scale = scale.cuda()
-            scale_bias = scale_bias.gpu()
+            scale_bias = scale_bias.cuda()
 
         self.weight_normal = tdist.Normal(loc, scale)
         self.bias_normal = tdist.Normal(loc, scale)
