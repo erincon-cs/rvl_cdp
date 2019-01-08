@@ -13,14 +13,18 @@ class LinearReparameterzation(nn.Module):
 
         loc_weight = torch.Tensor(out_features, in_features)
         self.init_weight(loc_weight)
+        self.loc_weight = Parameter(loc_weight)
+        self.register_parameter("loc_weight", self.loc_weight)
+
         scale_weight = torch.Tensor(out_features, in_features)
         self.init_weight(scale_weight)
 
-        self.loc_weight = Parameter(loc_weight)
-        self.scale_weight = Parameter(scale_weight)
-
         loc, scale = torch.tensor([0.0]), torch.tensor([2.5])
         scale_bias = torch.tensor([10.0])
+
+        self.scale_weight = Parameter(scale_weight)
+        self.register_parameter("scale_weight", self.scale_weight)
+
         if torch.cuda.is_available():
             loc = loc.cuda()
             scale = scale.cuda()
@@ -31,6 +35,7 @@ class LinearReparameterzation(nn.Module):
 
         self.kl_loss_weights = nn.KLDivLoss(size_average=False)
         self.kl_loss_bias = nn.KLDivLoss(size_average=False)
+
         self.kl_loss_target_weights = tdist.Normal(loc.clone(), scale.clone())
         self.kl_loss_target_bias = tdist.Normal(loc.clone(), scale_bias)
 
@@ -41,10 +46,9 @@ class LinearReparameterzation(nn.Module):
             scale_bias = torch.Tensor(out_features)
             self.init_bias(scale_bias)
 
-            self.loc_bias = Parameter(loc_bias)
-            self.scale_bias = Parameter(scale_bias)
-        else:
-            self.register_parameter('bias', None)
+            self.loc_bias, self.scale_bias = Parameter(loc_bias), Parameter(scale_bias)
+            self.register_parameter("loc_bias", self.loc_bias)
+            self.register_parameter("scale_bias", self.scale_bias)
 
     def init_weight(self, m):
         torch.nn.init.xavier_uniform(m)
@@ -73,7 +77,8 @@ class LinearReparameterzation(nn.Module):
 
         # bias_normal = tdist.Normal(loc_bias, scale_bias)
         # bias = bias_normal.sample(self.loc_bias.size())
-        kl_weight = self.kl_loss_weights(scale_weight, self.kl_loss_target_weights.sample(scale_weight.size()).squeeze())
+        kl_weight = self.kl_loss_weights(scale_weight,
+                                         self.kl_loss_target_weights.sample(scale_weight.size()).squeeze())
         kl_bias = self.kl_loss_bias(scale_bias, self.kl_loss_target_bias.sample(scale_bias.size()).squeeze())
         # kl_weight = torch.distributions.kl.kl_divergence(weight_normal, self.weight_normal)
         # kl_bias = torch.distributions.kl.kl_divergence(bias_normal, self.bias_normal)

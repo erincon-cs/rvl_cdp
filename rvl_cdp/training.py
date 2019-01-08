@@ -118,6 +118,10 @@ class Trainer:
                     preds = self.model.predict(image)
                     y.append(preds)
 
+                if iteration % 10 == 0:
+                    for name, param in self.model.named_parameters():
+                        self.writer.add_histogram(name, param.clone().cpu().data.numpy(), iteration)
+
             if keep_preds:
                 y = np.hstack(y)
                 y_true = np.hstack(y_true)
