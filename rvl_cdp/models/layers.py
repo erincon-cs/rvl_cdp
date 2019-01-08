@@ -29,8 +29,8 @@ class LinearReparameterzation(nn.Module):
         self.bias_normal = tdist.Normal(loc, scale)
 
         self.kl_loss = nn.KLDivLoss()
-        self.kl_loss_target_weights = tdist.Normal(torch.Tensor([0.0]), torch.Tensor([1.0]))
-        self.kl_loss_target_bias = tdist.Normal(torch.Tensor([0.0]), torch.Tensor([1.0]))
+        self.kl_loss_target_weights = tdist.Normal(loc.clone(), scale.clone())
+        self.kl_loss_target_bias = tdist.Normal(loc.clone(), scale.clone())
 
         if bias:
             loc_bias = torch.Tensor(out_features)
