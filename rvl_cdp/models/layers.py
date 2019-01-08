@@ -20,10 +20,11 @@ class LinearReparameterzation(nn.Module):
         self.scale_weight = Parameter(scale_weight)
 
         loc, scale = torch.tensor([0.0]), torch.tensor([2.5])
-
+        scale_bias = torch.tensor([10.0])
         if torch.cuda.is_available():
             loc = loc.cuda()
             scale = scale.cuda()
+            scale_bias = scale_bias.gpu()
 
         self.weight_normal = tdist.Normal(loc, scale)
         self.bias_normal = tdist.Normal(loc, scale)
@@ -31,7 +32,7 @@ class LinearReparameterzation(nn.Module):
         self.kl_loss_weights = nn.KLDivLoss(size_average=False)
         self.kl_loss_bias = nn.KLDivLoss(size_average=False)
         self.kl_loss_target_weights = tdist.Normal(loc.clone(), scale.clone())
-        self.kl_loss_target_bias = tdist.Normal(loc.clone(), scale.clone())
+        self.kl_loss_target_bias = tdist.Normal(loc.clone(), scale_bias)
 
         if bias:
             loc_bias = torch.Tensor(out_features)
