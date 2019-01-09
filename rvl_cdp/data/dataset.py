@@ -154,14 +154,18 @@ class Normalization:
 
 
 class ToTensor:
-    def __call__(self, sample, unsqueeze=False, *args, **kwargs):
+    def __init__(self, unsqueeze=False):
+        self.unsqueeze = unsqueeze
+
+    def __call__(self, sample, *args, **kwargs):
         image, label = sample["image"], sample['label']
         image = torch.from_numpy(image).float()
 
-        if unsqueeze:
-            image = image.unsqueeze(0)
+        if self.unsqueeze:
+            image = image.unsqueeze(2)
 
         return {"image": image, "label": label}
+
 
 class PermuteTensor:
     def __init__(self, reordering):
@@ -173,6 +177,7 @@ class PermuteTensor:
         image = image.permute(self.reordering)
 
         return {"image": image, "label": label}
+
 
 class NPTranspose:
     def __init__(self, reordering):
@@ -226,6 +231,16 @@ class BaseDataset(Dataset):
 
 class RVLCDIPDataset(BaseDataset):
     def __init__(self, *args, **kwargs):
+        if "transforms" not in kwargs:
+            transforms = Compose([
+                Normalization(),
+                Resize(),
+                ToTensor(unsqueeze=True),
+                PermuteTensor((2, 0, 1))
+            ])
+
+            kwargs["transforms"] = transforms
+
         super(RVLCDIPDataset, self).__init__(*args, nb_classes=16, **kwargs)
 
     def read_data(self):
@@ -234,15 +249,17 @@ class RVLCDIPDataset(BaseDataset):
 
 class CIFAR10(BaseDataset):
     def __init__(self, *args, **kwargs):
-        transforms = Compose([
+        if "transforms" not in kwargs:
+            transforms = Compose([
 
-            Normalization(),
-            Resize(),
-            ToTensor(),
-            PermuteTensor((2, 0, 1))
-        ])
+                Normalization(),
+                Resize(),
+                ToTensor(),
+                PermuteTensor((2, 0, 1))
+            ])
+            kwargs["transforms"] = transforms
 
-        super(CIFAR10, self).__init__(*args, nb_classes=10, transforms=transforms, **kwargs)
+        super(CIFAR10, self).__init__(*args, nb_classes=10, **kwargs)
 
     def read_data(self):
         label_dict, data = data_utils.read_image_folders(self.images_path, "*.png")
