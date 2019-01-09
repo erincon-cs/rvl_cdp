@@ -1,4 +1,5 @@
 import torch
+import math
 
 from torch import nn as nn, distributions as tdist
 from torch.nn import Parameter, functional as F
@@ -50,11 +51,16 @@ class LinearReparameterzation(nn.Module):
             self.register_parameter("loc_bias", self.loc_bias)
             self.register_parameter("scale_bias", self.scale_bias)
 
-    def init_weight(self, m):
-        torch.nn.init.xavier_uniform(m)
+    def init_bias(self, m):
 
-    def init_bias(self, b):
-        torch.nn.init.constant(b, 1.0)
+        # torch.nn.init.xavier_uniform(m)
+        torch.nn.init.constant(m, math.log(math.e ** 2.5 - 1))
+
+    def init_weight(self, m):
+        torch.nn.init.constant(m, 0.0)
+
+    # def init_bias(self, b):
+    #     torch.nn.init.constant(b, 1.0)
 
     def forward(self, x):
 

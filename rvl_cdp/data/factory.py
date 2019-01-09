@@ -70,9 +70,29 @@ def get_dataset_loader(dataset_name):
 
     return _dataset_loaders[dataset_name]
 
+_dataset_paths = {
+    "rvlcdip": "data/",
+    "cifar10": load_cifar10
+}
+
+
+def get_dataset_loader(dataset_name):
+    dataset_name = dataset_name.lower()
+
+    if dataset_name not in _dataset_loaders:
+        raise ValueError("Dataset loader for {} is not defined!".format(dataset_name))
+
+    return _dataset_loaders[dataset_name]
+
 
 def load_datasets(data_path, dataset_name):
-    data_utils.check_exist_path(data_path)
+    if data_path is not None:
+        data_utils.check_exist_path(data_path)
+
+    if data_path is None:
+        data_path = get
+
+
 
     dataset_loader = get_dataset_loader(dataset_name)
 

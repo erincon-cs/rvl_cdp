@@ -7,7 +7,7 @@ from rvl_cdp.models.factory import get_model
 from rvl_cdp.data.factory import load_datasets
 
 
-def summary_path_path(arg):
+def none_arg_path(arg):
     arg = arg.lower()
 
     if arg == "none":
@@ -17,10 +17,11 @@ def summary_path_path(arg):
 
 
 def boolean(arg):
-    if arg in ("y", "1", ):
+    if arg in ("y", "1",):
         return True
     else:
         return False
+
 
 _dataset_kwargs = {
     "rvlcdip": {"two_dim_map": True},
@@ -43,14 +44,14 @@ def main():
     arg_parser.add_argument("--dataset", default='rvlcdip', type=str,
                             help="Name of the dataset.\nThe default dataset is rvlcdip"
                                  "which is just the raw RVL-CDIP data")
-    arg_parser.add_argument("--data", type=str, help="Directory where the data is stored")
+    arg_parser.add_argument("--data", help="Directory where the data is stored", type=none_arg_path)
     arg_parser.add_argument("--num-workers", default=3, type=int,
                             help="The number of workers to use in the DataLoader")
     arg_parser.add_argument("--lr", default=0.0001, type=float, help="Learning rate")
     arg_parser.add_argument("--mb-size", default=64, type=int, help='Minibatch size')
     arg_parser.add_argument("--stats", default="")
     arg_parser.add_argument("--epochs", default=20, type=int)
-    arg_parser.add_argument("--summary-path", default="none", type=summary_path_path)
+    arg_parser.add_argument("--summary-path", default="none", type=none_arg_path)
     args = arg_parser.parse_args()
 
     datasets = load_datasets(args.data, args.dataset)
