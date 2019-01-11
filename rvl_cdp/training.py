@@ -21,6 +21,7 @@ class Trainer:
         self.valid_dataset = valid_dataset
         self.test_dataset = test_dataset
         self.trained = False
+        self.summary_path = summary_path
 
         if criterion is None:
             self.criterion = nn.CrossEntropyLoss()
@@ -35,7 +36,7 @@ class Trainer:
 
         self.writer = SummaryWriter(summary_path)
 
-    def _data_loop(self, data_loader, nb_epochs, criterion, minibatch_size=129, network_optimizer=None,
+    def _data_loop(self, data_loader, nb_epochs, criterion, minibatch_size=128, network_optimizer=None,
                    keep_preds=False):
         total_loss = []
         running_time = 0.0
@@ -137,7 +138,7 @@ class Trainer:
         return total_loss, y, y_true
 
     def fit(self, nb_epochs=10, learning_rate=0.0001,
-            num_workers=3, minibatch_size=64, verbose=True):
+            num_workers=3, minibatch_size=128, verbose=True):
         self.trained = True
 
         network_optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
@@ -147,7 +148,7 @@ class Trainer:
         training_loss, _, _ = self._data_loop(data_loader, nb_epochs, criterion, minibatch_size, network_optimizer,
                                               keep_preds=False)
 
-    def evaluate(self, dataset, data_loader=None, minibatch_size=64):
+    def evaluate(self, dataset, data_loader=None, minibatch_size=128):
         if not self.trained:
             raise UserWarning("Model is not trained yet!")
 
@@ -155,7 +156,7 @@ class Trainer:
             data_loader = DataLoader(dataset, batch_size=minibatch_size,
                                      shuffle=False, num_workers=3)
 
-        print("Evaluating on {} examples".format(len(data_loader)))
+        print("Evaluating on {} examples\n".format(len(data_loader)))
 
         criterion = nn.CrossEntropyLoss()
 
@@ -173,6 +174,6 @@ class Trainer:
 
             if accuracy > self.max_score:
                 self.max_score = accuracy
-                self.model.save("best_model.model")
+                self.model.save("{}_model".format(self.summary_path))
 
             return accuracy, avg_loss

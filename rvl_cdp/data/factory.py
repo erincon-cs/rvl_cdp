@@ -86,7 +86,7 @@ def get_dataset_path(dataset_name):
     return _dataset_paths[dataset_name]
 
 
-def load_datasets(data_path, dataset_name):
+def load_datasets(dataset_name, data_path=None):
     if data_path is not None:
         data_utils.check_exist_path(data_path)
 

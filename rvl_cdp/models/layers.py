@@ -54,7 +54,6 @@ class LinearReparameterzation(nn.Module):
             self.register_parameter("scale_bias", self.scale_bias)
 
     def init_bias(self, m):
-
         # torch.nn.init.xavier_uniform(m)
         torch.nn.init.constant(m, math.log(math.e ** 10 - 1))
 
