@@ -54,7 +54,7 @@ def main():
     arg_parser.add_argument("--summary-path", default="none", type=none_arg_path)
     args = arg_parser.parse_args()
 
-    datasets = load_datasets(args.data, args.dataset)
+    datasets = load_datasets(args.dataset, data_path=args.data)
 
     Model = get_model(args.model)
     model_kwwargs = get_model_kwargs(args.dataset)
