@@ -31,7 +31,7 @@ class BaseModel(nn.Module):
 
     def predict(self, x):
         preds = self.forward(x).cpu()
-        preds = self.softmax(preds).numpy()
+        preds = self._softmax(preds).numpy()
 
         preds = np.argmax(preds, axis=1)
 
@@ -158,7 +158,7 @@ class PretrainedBCNN(BaseModel):
 
         self.features = nn.Sequential(*list(net.children())[:-1])
         self.classifier = LinearReparameterzation(net.classifier.in_features, self.nb_classes)
-        self.softmax = nn.Softmax(dim=1)
+        self._softmax = nn.Softmax(dim=1)
 
     def forward_features(self, x):
         if self.two_dim_map:
