@@ -120,7 +120,7 @@ class Trainer:
                     y.append(preds)
 
                 if iteration % 10 == 0:
-                    for name, param in self.model.classifier.named_parameters():
+                    for name, param in self.model._classifier.named_parameters():
                         self.writer.add_histogram(name, param.clone().cpu().data.numpy(), iteration)
 
             if keep_preds:
