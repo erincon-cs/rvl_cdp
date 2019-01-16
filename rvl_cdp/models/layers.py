@@ -6,9 +6,23 @@ from torch.nn import Parameter, functional as F
 
 from rvl_cdp.models.loss import normal_kl
 
+_transforms = {
+    "sofplus": F.softplus,
+    "exp": F.exp
+}
+
+
+def _get_transform(transform_name):
+    transform_name = transform_name.lower()
+
+    if transform_name not in _transforms:
+        raise ValueError("Transformer function {} not defined!".format(transform_name))
+
+    return _transforms[transform_name]
+
 
 class LinearReparameterzation(nn.Module):
-    def __init__(self, in_features, out_features, bias=True):
+    def __init__(self, in_features, out_features, bias=True, transformer_name="exp"):
         super(LinearReparameterzation, self).__init__()
 
         self.in_features = in_features
@@ -41,6 +55,8 @@ class LinearReparameterzation(nn.Module):
 
         self.kl_loss_target_weights = tdist.Normal(loc.clone(), scale.clone())
         self.kl_loss_target_bias = tdist.Normal(loc.clone(), scale_bias)
+
+        self.scale_transform = _get_transform(transformer_name)
 
         if bias:
             loc_bias = torch.Tensor(out_features)
@@ -78,7 +94,7 @@ class LinearReparameterzation(nn.Module):
             epsilon_bias = epsilon_bias.cuda()
 
         # log transform
-        scale_weight, scale_bias = F.softplus(scale_weight), F.softplus(scale_bias)
+        scale_weight, scale_bias = self.scale_transform(scale_weight), self.scale_transform(scale_bias)
         # weight_normal = tdist.Normal(loc_weight, scale_weight)
         # weight = weight_normal.sample(self.loc_weight.size())
 
@@ -90,8 +106,6 @@ class LinearReparameterzation(nn.Module):
 
         # kl_weight = torch.distributions.kl.kl_divergence(weight_normal, self.weight_normal)
         # kl_bias = torch.distributions.kl.kl_divergence(bias_normal, self.bias_normal)
-
-
 
         # kl = kl_weight.sum(dim=-1) + kl_bias.sum(dim=-1)
         # kl /= kl_weight.size()[1]
