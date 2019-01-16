@@ -157,7 +157,7 @@ class PretrainedBCNN(BaseModel):
         net = self._freeze_layers(net)
 
         self.features = nn.Sequential(*list(net.children())[:-1])
-        self.classifier = LinearReparameterzation(net.classifier.in_features, self.nb_classes)
+        self._classifier = LinearReparameterzation(net.classifier.in_features, self.nb_classes)
         self._softmax = nn.Softmax(dim=1)
 
     def forward_features(self, x):
@@ -181,7 +181,7 @@ class PretrainedBCNN(BaseModel):
 
         x = (x - mean) / (2 * std)
 
-        x, kl = self.classifier(x)
+        x, kl = self._classifier(x)
 
         self.kl = kl
 
