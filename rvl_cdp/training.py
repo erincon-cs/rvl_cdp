@@ -124,6 +124,7 @@ class Trainer:
                         self.writer.add_histogram(name, param.clone().cpu().data.numpy(), iteration)
 
             if keep_preds:
+
                 y = np.hstack(y)
                 y_true = np.hstack(y_true)
 

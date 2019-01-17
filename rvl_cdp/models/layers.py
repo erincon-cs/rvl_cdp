@@ -8,7 +8,7 @@ from rvl_cdp.models.loss import normal_kl
 
 _transforms = {
     "sofplus": F.softplus,
-    "exp": F.exp
+    "exp": torch.exp
 }
 
 
@@ -114,7 +114,7 @@ class LinearReparameterzation(nn.Module):
         bias = loc_bias + scale_bias * epsilon_bias
 
         kl_weight = sum(sum(normal_kl(loc_weight, scale_weight, 0.0, 2.5)))
-        kl_bias = sum(normal_kl(loc_bias, scale_bias, 0.0, 2.5))
+        kl_bias = sum(normal_kl(loc_bias, scale_bias, 0.0, 10))
         kl = kl_weight + kl_bias
 
         print(kl)

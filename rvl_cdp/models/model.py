@@ -175,11 +175,11 @@ class PretrainedBCNN(BaseModel):
         x = self.forward_features(x)
 
         if self.mean is None or self.std is None:
-            mean, std = x.mean(), x.std()
+            mean, std = x.mean(dim=1), x.std(dim=1)
         else:
             mean, std = self.mean, self.std
 
-        x = (x - mean) / (2 * std)
+        x = (x - mean) / std
 
         x, kl = self._classifier(x)
 
@@ -221,3 +221,21 @@ class DenseNet121(BaseModel):
         x = self._classifier(x)
 
         return x
+
+
+
+class BayesianLogisticRegression(BaseModel):
+    def __init__(self, nb_classes, in_features):
+        super(BayesianLogisticRegression, self).__init__("BayesianLogisticRegression")
+
+        self.nb_classes = nb_classes
+
+        self._classifier = LinearReparameterzation(in_features, nb_classes)
+
+    def forward(self, x):
+        x = self._classifier(x)
+
+        return x
+
+
+
