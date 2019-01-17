@@ -152,7 +152,7 @@ class PretrainedBCNN(BaseModel):
         self.std = None
 
         if two_dim_map:
-            self.conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
+            self._conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
         net = densenet121(pretrained=pretrained)
         net = self._freeze_layers(net)
 
@@ -162,7 +162,7 @@ class PretrainedBCNN(BaseModel):
 
     def forward_features(self, x):
         if self.two_dim_map:
-            x = self.conv_mapping(x)
+            x = self._conv_mapping(x)
 
         x = self._features(x)
 
