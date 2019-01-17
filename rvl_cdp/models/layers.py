@@ -99,8 +99,15 @@ class LinearReparameterzation(nn.Module):
         loc = loc_weight + scale_weight * epsilon_weight
         bias = loc_bias + scale_bias * epsilon_bias
 
-        kl_weight = sum(sum(normal_kl(loc_weight, scale_weight, torch.Tensor([0.0]), torch.Tensor([2.5]))))
-        kl_bias = sum(normal_kl(loc_bias, scale_bias, torch.Tensor([0.0]), torch.Tensor([10])))
+        weight_mean, weight_std = torch.Tensor([0.0]), torch.Tensor([2.5])
+        bias_mean, bias_std = torch.Tensor([0.0]).cuda(), torch.Tensor([10])
+
+        if torch.cuda.is_available():
+            weight_mean, weight_std = weight_mean.cuda(), weight_std.cuda()
+            bias_mean, bias_std = bias_mean.cuda(), bias_std.cuda()
+
+        kl_weight = sum(sum(normal_kl(loc_weight, scale_weight, weight_mean, weight_std)))
+        kl_bias = sum(normal_kl(loc_bias, scale_bias, bias_mean, bias_std))
         kl = kl_weight + kl_bias
 
         print(kl)
