@@ -156,7 +156,7 @@ class PretrainedBCNN(BaseModel):
         net = densenet121(pretrained=pretrained)
         net = self._freeze_layers(net)
 
-        self.features = nn.Sequential(*list(net.children())[:-1])
+        self._features = nn.Sequential(*list(net.children())[:-1])
         self._classifier = LinearReparameterzation(net.classifier.in_features, self.nb_classes)
         self._softmax = nn.Softmax(dim=1)
 
@@ -164,7 +164,7 @@ class PretrainedBCNN(BaseModel):
         if self.two_dim_map:
             x = self.conv_mapping(x)
 
-        x = self.features(x)
+        x = self._features(x)
 
         x = F.relu(x, inplace=True)
         x = F.avg_pool2d(x, kernel_size=7).view(x.size(0), -1)
