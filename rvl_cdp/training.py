@@ -85,10 +85,10 @@ class Trainer:
 
                 loss = instance_likelihood
 
-                if self.model.kl is not None:
+                if self.model._kl is not None:
                     loss *= len(self.training_dataset)
 
-                if self.model.kl is not None:
+                if self.model._kl is not None:
                     kl = self.model._kl
                     self.writer.add_scalar("{} kl".format(mode), kl, iteration)
 
