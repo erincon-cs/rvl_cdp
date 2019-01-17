@@ -23,7 +23,7 @@ class BaseModel(nn.Module):
         super(BaseModel, self).__init__()
 
         self.name = name
-        self.kl = None
+        self._kl = None
 
     def set_embeddings(self, vectors, freeze=True):
         self.embedding.weight = nn.Parameter(vectors)
@@ -183,7 +183,7 @@ class PretrainedBCNN(BaseModel):
 
         x, kl = self._classifier(x)
 
-        self.kl = kl
+        self._kl = kl
 
         return x
 

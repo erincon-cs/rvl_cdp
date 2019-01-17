@@ -89,7 +89,7 @@ class Trainer:
                     loss *= len(self.training_dataset)
 
                 if self.model.kl is not None:
-                    kl = self.model.kl
+                    kl = self.model._kl
                     self.writer.add_scalar("{} kl".format(mode), kl, iteration)
 
                     loss += kl
