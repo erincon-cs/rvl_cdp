@@ -1,12 +1,11 @@
 import torch
 import math
 
-from torch.autograd import Variable
 
 from torch import nn as nn, distributions as tdist
 from torch.nn import Parameter, functional as F
 
-from rvl_cdp.models.loss import normal_kl
+from rvl_cdp.models.loss import KLNormal
 
 _transforms = {
     "sofplus": F.softplus,
@@ -51,8 +50,8 @@ class LinearReparameterzation(nn.Module):
         self.weight_normal = tdist.Normal(loc, scale)
         self.bias_normal = tdist.Normal(loc, scale)
 
-        self.kl_loss_weights = nn.KLDivLoss()
-        self.kl_loss_bias = nn.KLDivLoss()
+        self.kl_loss_weights = KLNormal()
+        self.kl_loss_bias = KLNormal()
 
         self.kl_loss_target_weights = tdist.Normal(loc.clone(), scale.clone())
         self.kl_loss_target_bias = tdist.Normal(loc.clone(), scale_bias)
@@ -100,14 +99,14 @@ class LinearReparameterzation(nn.Module):
         bias = loc_bias + scale_bias * epsilon_bias
 
         weight_mean, weight_std = torch.Tensor([0.0]), torch.Tensor([2.5])
-        bias_mean, bias_std = torch.Tensor([0.0]).cuda(), torch.Tensor([10])
+        bias_mean, bias_std = torch.Tensor([0.0]), torch.Tensor([10])
 
         if torch.cuda.is_available():
             weight_mean, weight_std = weight_mean.cuda(), weight_std.cuda()
             bias_mean, bias_std = bias_mean.cuda(), bias_std.cuda()
 
-        kl_weight = sum(sum(normal_kl(loc_weight, scale_weight, weight_mean, weight_std)))
-        kl_bias = sum(normal_kl(loc_bias, scale_bias, bias_mean, bias_std))
+        kl_weight = sum(sum(self.kl_loss_weights(loc_weight, scale_weight, weight_mean, weight_std)))
+        kl_bias = sum(self.kl_loss_bias(loc_bias, scale_bias, bias_mean, bias_std))
         kl = kl_weight + kl_bias
 
         return F.linear(x, loc, bias), kl
