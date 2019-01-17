@@ -110,8 +110,6 @@ class LinearReparameterzation(nn.Module):
         kl_bias = sum(normal_kl(loc_bias, scale_bias, bias_mean, bias_std))
         kl = kl_weight + kl_bias
 
-        print(kl)
-
         return F.linear(x, loc, bias), kl
 
 
