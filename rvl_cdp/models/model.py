@@ -175,7 +175,7 @@ class PretrainedBCNN(BaseModel):
         x = self.forward_features(x)
 
         if self.mean is None or self.std is None:
-            mean, std = x.mean(dim=1), x.std(dim=1)
+            mean, std = x.mean(dim=0), x.std(dim=0)
         else:
             mean, std = self.mean, self.std
 
