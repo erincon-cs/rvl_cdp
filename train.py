@@ -44,7 +44,7 @@ def main():
     arg_parser.add_argument("--dataset", default='rvlcdip', type=str,
                             help="Name of the dataset.\nThe default dataset is rvlcdip"
                                  "which is just the raw RVL-CDIP data")
-    arg_parser.add_argument("--data", help="Directory where the data is stored", type=none_arg_path)
+    arg_parser.add_argument("--data-path", help="Directory where the data is stored", type=none_arg_path)
     arg_parser.add_argument("--num-workers", default=3, type=int,
                             help="The number of workers to use in the DataLoader")
     arg_parser.add_argument("--lr", default=0.0001, type=float, help="Learning rate")
@@ -54,7 +54,7 @@ def main():
     arg_parser.add_argument("--summary-path", default="none", type=none_arg_path)
     args = arg_parser.parse_args()
 
-    datasets = load_datasets(args.dataset, data_path=args.data)
+    datasets = load_datasets(args.dataset, data_path=args.data_path)
 
     Model = get_model(args.model)
     model_kwwargs = get_model_kwargs(args.dataset)
