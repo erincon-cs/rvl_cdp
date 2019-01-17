@@ -37,12 +37,11 @@ class LinearReparameterzation(nn.Module):
 
         scale_weight = torch.Tensor(out_features, in_features)
         self.init_weight(scale_weight)
+        self.scale_weight = Parameter(scale_weight)
+        self.register_parameter("scale_weight", self.scale_weight)
 
         loc, scale = torch.tensor([0.0]), torch.tensor([2.5])
         scale_bias = torch.tensor([10.0])
-
-        self.scale_weight = Parameter(scale_weight)
-        self.register_parameter("scale_weight", self.scale_weight)
 
         if torch.cuda.is_available():
             loc = loc.cuda()
@@ -72,11 +71,11 @@ class LinearReparameterzation(nn.Module):
             self.register_parameter("scale_bias", self.scale_bias)
 
     def init_bias(self, m):
-        # torch.nn.init.xavier_uniform(m)
         torch.nn.init.constant(m, math.log(math.e ** 10 - 1))
 
     def init_weight(self, m):
-        torch.nn.init.constant(m, math.log(math.e ** 2.5 - 1))
+        torch.nn.init.xavier_uniform(m)
+        # torch.nn.init.constant(m, math.log(math.e ** 2.5 - 1))
 
     # def init_bias(self, b):
     #     torch.nn.init.constant(b, 1.0)
@@ -95,28 +94,13 @@ class LinearReparameterzation(nn.Module):
             epsilon_weight = epsilon_weight.cuda()
             epsilon_bias = epsilon_bias.cuda()
 
-        # log transform
         scale_weight, scale_bias = self.scale_transform(scale_weight), self.scale_transform(scale_bias)
-        # weight_normal = tdist.Normal(loc_weight, scale_weight)
-        # weight = weight_normal.sample(self.loc_weight.size())
 
-        # bias_normal = tdist.Normal(loc_bias, scale_bias)
-        # bias = bias_normal.sample(self.loc_bias.size())
-        # kl_weight = self.kl_loss_weights(scale_weight,
-        #                                  self.kl_loss_target_weights.sample(scale_weight.size()).squeeze())
-        # kl_bias = self.kl_loss_bias(scale_bias, self.kl_loss_target_bias.sample(scale_bias.size()).squeeze())
+        loc = loc_weight + scale_weight * epsilon_weight
+        bias = loc_bias + scale_bias * epsilon_bias
 
-        # kl_weight = torch.distributions.kl.kl_divergence(weight_normal, self.weight_normal)
-        # kl_bias = torch.distributions.kl.kl_divergence(bias_normal, self.bias_normal)
-
-        # kl = kl_weight.sum(dim=-1) + kl_bias.sum(dim=-1)
-        # kl /= kl_weight.size()[1]
-
-        loc = loc_weight + scale_weight * Variable(epsilon_weight, requires_grad=False)
-        bias = loc_bias + scale_bias * Variable(epsilon_bias, requires_grad=False)
-
-        kl_weight = sum(sum(normal_kl(loc_weight, scale_weight, 0.0, 2.5)))
-        kl_bias = sum(normal_kl(loc_bias, scale_bias, 0.0, 10))
+        kl_weight = sum(sum(normal_kl(loc_weight, scale_weight, torch.Tensor([0.0]), torch.Tensor([2.5]))))
+        kl_bias = sum(normal_kl(loc_bias, scale_bias, torch.Tensor([0.0]), torch.Tensor([10])))
         kl = kl_weight + kl_bias
 
         print(kl)
