@@ -1,6 +1,8 @@
 import torch
 import math
 
+from torch.autograd import Variable
+
 from torch import nn as nn, distributions as tdist
 from torch.nn import Parameter, functional as F
 
@@ -110,8 +112,8 @@ class LinearReparameterzation(nn.Module):
         # kl = kl_weight.sum(dim=-1) + kl_bias.sum(dim=-1)
         # kl /= kl_weight.size()[1]
 
-        loc = loc_weight + scale_weight * epsilon_weight
-        bias = loc_bias + scale_bias * epsilon_bias
+        loc = loc_weight + scale_weight * Variable(epsilon_weight, requires_grad=False)
+        bias = loc_bias + scale_bias * Variable(epsilon_bias, requires_grad=False)
 
         kl_weight = sum(sum(normal_kl(loc_weight, scale_weight, 0.0, 2.5)))
         kl_bias = sum(normal_kl(loc_bias, scale_bias, 0.0, 10))
