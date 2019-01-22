@@ -1,18 +1,16 @@
 import torch
 import pandas as pd
 import os
-import numpy as np
 
 from collections import OrderedDict
 import rvl_cdp.data.util as data_utils
 
-from PIL import Image
-from skimage import io, transform
-from skimage.transform import rescale, resize, downscale_local_mean
+from skimage import io
 
 from torch.utils.data import Dataset
-from torchvision.transforms import Compose, RandomCrop, RandomHorizontalFlip, \
-    RandomVerticalFlip
+from torchvision.transforms import Compose
+
+from rvl_cdp.data.transforms import Resize, Normalization, ToTensor, PermuteTensor
 
 
 def one_hot(labels, num_classes):
@@ -40,155 +38,9 @@ def read_textfile(image_paths, path):
 
             examples.append({"path": image_path, "label": int(label)})
 
+
+
     return pd.DataFrame(examples, columns=["path", "label"])
-
-
-class HorizontalFlip:
-    def __init__(self, p=0.5):
-        super(HorizontalFlip, self).__init__()
-
-        self.flip = RandomHorizontalFlip(p)
-
-    def __call__(self, image, *args, **kwargs):
-        return self.flip(image)
-
-
-class VerticalFlip:
-    def __init__(self, p=0.5):
-        super(VerticalFlip, self).__init__()
-
-        self.flip = RandomVerticalFlip(p)
-
-    def __call__(self, sample, *args, **kwargs):
-        image = sample["image"]
-
-        return self.flip(image)
-
-
-class Rescale:
-    """Rescale the image in a sample to a given size.
-
-    Args:
-        output_size (tuple or int): Desired output size. If tuple, output is
-            matched to output_size. If int, smaller of image edges is matched
-            to output_size keeping aspect ratio the same.
-    """
-
-    def __init__(self, output_size):
-        assert isinstance(output_size, (int, tuple))
-        self.output_size = output_size
-
-    def __call__(self, sample):
-        image, landmarks = sample['image'], sample['label']
-
-        h, w = image.shape[:2]
-        if isinstance(self.output_size, int):
-            if h > w:
-                new_h, new_w = self.output_size * h / w, self.output_size
-            else:
-                new_h, new_w = self.output_size, self.output_size * w / h
-        else:
-            new_h, new_w = self.output_size
-
-        new_h, new_w = int(new_h), int(new_w)
-
-        img = transform.resize(image, (new_h, new_w))
-
-        # h and w are swapped for landmarks because for images,
-        # x and y axes are axis 1 and 0 respectively
-        landmarks = landmarks * [new_w / w, new_h / h]
-
-        return {'image': img, 'landmarks': landmarks}
-
-
-class RandomImageCrop:
-    """Crop randomly the image in a sample.
-
-    Args:
-        output_size (tuple or int): Desired output size. If int, square crop
-            is made.
-    """
-
-    def __init__(self, output_size):
-        assert isinstance(output_size, (int, tuple))
-        if isinstance(output_size, int):
-            self.output_size = (output_size, output_size)
-        else:
-            assert len(output_size) == 2
-            self.output_size = output_size
-
-    def __call__(self, image):
-        image = np.array(image)
-        h, w = image.shape[:2]
-        new_h, new_w = self.output_size
-
-        top = np.random.randint(0, h - new_h)
-        left = np.random.randint(0, w - new_w)
-
-        image = image[top: top + new_h,
-                left: left + new_w]
-        image = Image.fromarray(image)
-        return image
-
-
-class Resize:
-    def __init__(self, size=(256, 256)):
-        super(Resize, self).__init__()
-        self.size = size
-
-    def __call__(self, sample, *args, **kwargs):
-        image, label = sample["image"], sample['label']
-        image = resize(image, self.size)
-
-        return {"image": image, "label": label}
-
-
-class Normalization:
-
-    def __call__(self, sample, *args, **kwargs):
-        image, label = sample["image"], sample['label']
-
-        image = (image - image.mean()) / image.std()
-
-        return {"image": image, "label": label}
-
-
-class ToTensor:
-    def __init__(self, unsqueeze=False):
-        self.unsqueeze = unsqueeze
-
-    def __call__(self, sample, *args, **kwargs):
-        image, label = sample["image"], sample['label']
-        image = torch.from_numpy(image).float()
-
-        if self.unsqueeze:
-            image = image.unsqueeze(2)
-
-        return {"image": image, "label": label}
-
-
-class PermuteTensor:
-    def __init__(self, reordering):
-        self.reordering = reordering
-
-    def __call__(self, sample, *args, **kwargs):
-        image, label = sample["image"], sample['label']
-
-        image = image.permute(self.reordering)
-
-        return {"image": image, "label": label}
-
-
-class NPTranspose:
-    def __init__(self, reordering):
-        self.reordering = reordering
-
-    def __call__(self, sample, *args, **kwargs):
-        image, label = sample["image"], sample['label']
-
-        image = np.transpose(image, self.reordering)
-
-        return {"image": image, "label": label}
 
 
 class BaseDataset(Dataset):
@@ -212,6 +64,7 @@ class BaseDataset(Dataset):
         self.data = data if data is not None else self.read_data()
 
     def __getitem__(self, idx):
+        print(idx)
         image_path, label = self.data.path.iloc[idx], self.data.label.iloc[idx]
 
         image = io.imread(image_path)
@@ -233,15 +86,26 @@ class RVLCDIPDataset(BaseDataset):
     def __init__(self, *args, **kwargs):
         if "transforms" not in kwargs:
             transforms = Compose([
-                Normalization(),
                 Resize(),
+                Normalization(),
                 ToTensor(unsqueeze=True),
                 PermuteTensor((2, 0, 1))
             ])
 
             kwargs["transforms"] = transforms
 
+
         super(RVLCDIPDataset, self).__init__(*args, nb_classes=16, **kwargs)
+
+
+        if os.path.exists("data/rvl_cdip/errors.txt"):
+            with open("data/rvl_cdip/errors.txt") as error_files:
+                error_paths = error_files.readlines()
+
+                self.data = self.data[~self.data.path.isin(error_paths)]
+
+
+
 
     def read_data(self):
         return read_textfile(self.images_path, self.labels_path)
@@ -251,9 +115,8 @@ class CIFAR10(BaseDataset):
     def __init__(self, *args, **kwargs):
         if "transforms" not in kwargs:
             transforms = Compose([
-
-                Normalization(),
                 Resize(),
+                Normalization(),
                 ToTensor(),
                 PermuteTensor((2, 0, 1))
             ])
@@ -267,3 +130,4 @@ class CIFAR10(BaseDataset):
         self.label_dict = label_dict
 
         return data
+

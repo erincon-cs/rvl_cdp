@@ -3,8 +3,7 @@ import rvl_cdp.data.util as data_utils
 
 from rvl_cdp.data.dataset import RVLCDIPDataset, CIFAR10
 from torchvision.transforms import Compose
-from rvl_cdp.data.dataset import Resize, ToTensor, \
-    Normalization, RandomImageCrop
+from rvl_cdp.data.transforms import RandomImageCrop, Resize, Normalization, ToTensor
 
 from sklearn.model_selection import train_test_split
 
