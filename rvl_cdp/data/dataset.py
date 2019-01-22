@@ -64,7 +64,6 @@ class BaseDataset(Dataset):
         self.data = data if data is not None else self.read_data()
 
     def __getitem__(self, idx):
-        print(idx)
         image_path, label = self.data.path.iloc[idx], self.data.label.iloc[idx]
 
         image = io.imread(image_path)
