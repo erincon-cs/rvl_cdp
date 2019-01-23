@@ -38,8 +38,6 @@ def read_textfile(image_paths, path):
 
             examples.append({"path": image_path, "label": int(label)})
 
-
-
     return pd.DataFrame(examples, columns=["path", "label"])
 
 
@@ -93,18 +91,13 @@ class RVLCDIPDataset(BaseDataset):
 
             kwargs["transforms"] = transforms
 
-
         super(RVLCDIPDataset, self).__init__(*args, nb_classes=16, **kwargs)
-
 
         if os.path.exists("data/rvl_cdip/errors.txt"):
             with open("data/rvl_cdip/errors.txt") as error_files:
                 error_paths = error_files.readlines()
 
                 self.data = self.data[~self.data.path.isin(error_paths)]
-
-
-
 
     def read_data(self):
         return read_textfile(self.images_path, self.labels_path)
@@ -130,3 +123,43 @@ class CIFAR10(BaseDataset):
 
         return data
 
+
+class Food101(BaseDataset):
+    def __init__(self, *args, **kwargs):
+        if "transforms" not in kwargs:
+            transforms = Compose([
+                Resize(),
+                Normalization(),
+                ToTensor(),
+                PermuteTensor((2, 0, 1))
+            ])
+            kwargs["transforms"] = transforms
+
+        super(Food101, self).__init__(*args, nb_classes=101, **kwargs)
+
+    def read_data(self):
+        label_dict = OrderedDict()
+        cleaned_image_file_paths, mapped_labels = [], []
+
+        with open(self.labels_path, "r") as image_files:
+            image_files = image_files.readlines()
+
+            for label_file in image_files:
+                label = label_file.split('/')[0].lower().strip()
+                label_file = label_file.replace("\n", "") + '.jpg'
+
+                label_file = os.path.join(self.images_path, label_file)
+
+                cleaned_image_file_paths.append(label_file)
+
+
+
+                if label not in label_dict:
+                    label_dict[label] = len(label_dict)
+                mapped_label = label_dict[label]
+
+                mapped_labels.append(mapped_label)
+
+        self.label_dict = label_dict
+
+        return pd.DataFrame({"path": cleaned_image_file_paths, "label": mapped_labels})
