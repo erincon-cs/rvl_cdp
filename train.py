@@ -26,7 +26,7 @@ def boolean(arg):
 _dataset_kwargs = {
     "rvlcdip": {"two_dim_map": True},
     "cifar10": {},
-    "food101": {}
+    "food101": {"nb_classes": 101}
 }
 
 
