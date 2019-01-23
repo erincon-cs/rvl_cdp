@@ -1,15 +1,14 @@
 import os
 import rvl_cdp.data.util as data_utils
 
-from rvl_cdp.data.dataset import RVLCDIPDataset, CIFAR10
-from torchvision.transforms import Compose
-from rvl_cdp.data.transforms import RandomImageCrop, Resize, Normalization, ToTensor
+from rvl_cdp.data.dataset import RVLCDIPDataset, CIFAR10, Food101
 
 from sklearn.model_selection import train_test_split
 
 _datasets = {
     "rvlcdip": RVLCDIPDataset,
-    "cifar10": CIFAR10
+    "cifar10": CIFAR10,
+    "food101": Food101
 }
 
 
@@ -56,24 +55,27 @@ def load_cifar10(data_path, *args, **kwargs):
 
 
 def load_food101(data_path, *args, **kwargs):
-    train_images_path, test_labels_path = os.path.join(data_path, "train.txt"), os.path.join(data_path, "test.txt")
     images_path = os.path.join(data_path, "images")
+    train_labels_path, test_labels_path = os.path.join(data_path, "train.txt"), os.path.join(data_path, "test.txt")
     Dataset = get_dataset("food101")
 
+    label_dict, train_data = Food101.load_images_labels(images_path, test_labels_path)
+    _, test_data = Food101.load_images_labels(images_path, test_labels_path)
 
+    train_data, valid_data = train_test_split(train_data, test_size=0.2, random_state=2019)
     train_data, valid_data = train_data.reset_index(drop=True), valid_data.reset_index(drop=True)
 
-    train_dataset = Dataset(images_path=images_path, labels_path=train_labels)
-    valid_dataset = Dataset(images_path=images_path, labels_path=valid_labels)
-    test_dataset = Dataset(images_path=images_path, labels_path=test_labels)
+    train_dataset = Dataset(data=train_data, label_dict=label_dict)
+    valid_dataset = Dataset(data=valid_data, label_dict=label_dict)
+    test_dataset = Dataset(data=test_data, label_dict=label_dict)
 
     return {"train_dataset": train_dataset, "valid_dataset": valid_dataset, "test_dataset": test_dataset}
 
 
-
 _dataset_loaders = {
     "rvlcdip": load_rvlcdip,
-    "cifar10": load_cifar10
+    "cifar10": load_cifar10,
+    "food101": load_food101
 }
 
 
@@ -88,7 +90,8 @@ def get_dataset_loader(dataset_name):
 
 _dataset_paths = {
     "rvlcdip": "data/rvl_cdip",
-    "cifar10": "data/cifar10"
+    "cifar10": "data/cifar10",
+    "food101": "data/food-101"
 }
 
 

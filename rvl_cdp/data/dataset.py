@@ -138,21 +138,27 @@ class Food101(BaseDataset):
         super(Food101, self).__init__(*args, nb_classes=101, **kwargs)
 
     def read_data(self):
+        label_dict, data = Food101.load_images_labels(self.images_path, self.labels_path)
+
+        self.label_dict = label_dict
+
+        return data
+
+    @classmethod
+    def load_images_labels(cls, images_path, labels_path):
         label_dict = OrderedDict()
         cleaned_image_file_paths, mapped_labels = [], []
 
-        with open(self.labels_path, "r") as image_files:
+        with open(labels_path, "r") as image_files:
             image_files = image_files.readlines()
 
             for label_file in image_files:
                 label = label_file.split('/')[0].lower().strip()
                 label_file = label_file.replace("\n", "") + '.jpg'
 
-                label_file = os.path.join(self.images_path, label_file)
+                label_file = os.path.join(images_path, label_file)
 
                 cleaned_image_file_paths.append(label_file)
-
-
 
                 if label not in label_dict:
                     label_dict[label] = len(label_dict)
@@ -160,6 +166,4 @@ class Food101(BaseDataset):
 
                 mapped_labels.append(mapped_label)
 
-        self.label_dict = label_dict
-
-        return pd.DataFrame({"path": cleaned_image_file_paths, "label": mapped_labels})
+        return label_dict, pd.DataFrame({"path": cleaned_image_file_paths, "label": mapped_labels})
