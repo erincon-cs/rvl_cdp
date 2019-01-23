@@ -55,6 +55,22 @@ def load_cifar10(data_path, *args, **kwargs):
     return {"train_dataset": train_dataset, "valid_dataset": valid_dataset, "test_dataset": test_dataset}
 
 
+def load_food101(data_path, *args, **kwargs):
+    train_images_path, test_labels_path = os.path.join(data_path, "train.txt"), os.path.join(data_path, "test.txt")
+    images_path = os.path.join(data_path, "images")
+    Dataset = get_dataset("food101")
+
+
+    train_data, valid_data = train_data.reset_index(drop=True), valid_data.reset_index(drop=True)
+
+    train_dataset = Dataset(images_path=images_path, labels_path=train_labels)
+    valid_dataset = Dataset(images_path=images_path, labels_path=valid_labels)
+    test_dataset = Dataset(images_path=images_path, labels_path=test_labels)
+
+    return {"train_dataset": train_dataset, "valid_dataset": valid_dataset, "test_dataset": test_dataset}
+
+
+
 _dataset_loaders = {
     "rvlcdip": load_rvlcdip,
     "cifar10": load_cifar10

@@ -15,13 +15,14 @@ from tensorboardX import SummaryWriter
 
 class Trainer:
     def __init__(self, model, train_dataset, valid_dataset=None, test_dataset=None,
-                 summary_path=None, criterion=None):
+                 summary_path=None, criterion=None, weight_histograms=True):
         self.model = model.train()
         self.training_dataset = train_dataset
         self.valid_dataset = valid_dataset
         self.test_dataset = test_dataset
         self.trained = False
         self.summary_path = summary_path
+        self.weight_histograms = weight_histograms
 
         if criterion is None:
             self.criterion = nn.CrossEntropyLoss()
@@ -119,7 +120,7 @@ class Trainer:
                     preds = self.model.predict(image)
                     y.append(preds)
 
-                if iteration % 10 == 0:
+                if iteration % 10 == 0 and self.weight_histograms:
                     for name, param in self.model._classifier.named_parameters():
                         self.writer.add_histogram(name, param.clone().cpu().data.numpy(), iteration)
 

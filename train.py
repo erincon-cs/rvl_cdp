@@ -17,7 +17,7 @@ def none_arg_path(arg):
 
 
 def boolean(arg):
-    if arg in ("y", "1",):
+    if arg in ("y", "yes", "1", "true", "t"):
         return True
     else:
         return False
@@ -52,6 +52,7 @@ def main():
     arg_parser.add_argument("--stats", default="")
     arg_parser.add_argument("--epochs", default=20, type=int)
     arg_parser.add_argument("--summary-path", default="none", type=none_arg_path)
+    arg_parser.add_argument("--weight-hists", default="y", type=boolean)
     args = arg_parser.parse_args()
 
     datasets = load_datasets(args.dataset, data_path=args.data_path)
@@ -60,7 +61,8 @@ def main():
     model_kwwargs = get_model_kwargs(args.dataset)
     model = Model(**model_kwwargs)
 
-    trainer = Trainer(model, summary_path=args.summary_path, **datasets)
+    trainer = Trainer(model, summary_path=args.summary_path, weight_histograms=args.weight_hists,
+                      **datasets)
     trainer.fit(learning_rate=args.lr, minibatch_size=args.mb_size, nb_epochs=args.epochs)
     trainer.evaluate(datasets["test_dataset"])
 
