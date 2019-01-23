@@ -166,16 +166,15 @@ class Trainer:
             self.model.cuda()
 
         running_time, avg_loss = 0, 0
+        self.model.eval()
+        training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
+                                                   network_optimizer=None, keep_preds=True)
+        accuracy = accuracy_score(y, y_true)
 
-        with torch.no_grad():
-            training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
-                                                       network_optimizer=None, keep_preds=True)
-            accuracy = accuracy_score(y, y_true)
+        print("\nAccuracy: {0:.2f}".format(accuracy))
 
-            print("\nAccuracy: {0:.2f}".format(accuracy))
+        if accuracy > self.max_score:
+            self.max_score = accuracy
+            self.model.save("{}_model".format(self.summary_path))
 
-            if accuracy > self.max_score:
-                self.max_score = accuracy
-                self.model.save("{}_model".format(self.summary_path))
-
-            return accuracy, avg_loss
+        return accuracy, avg_loss
