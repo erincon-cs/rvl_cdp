@@ -163,6 +163,7 @@ class Trainer:
         criterion = nn.CrossEntropyLoss()
 
         if torch.cuda.is_available():
+            torch.cuda.empty_cache()
             self.model.cuda()
 
         running_time, avg_loss = 0, 0
