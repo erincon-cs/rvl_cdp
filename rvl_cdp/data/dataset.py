@@ -125,11 +125,12 @@ class CIFAR10(BaseDataset):
 
 
 class Food101(BaseDataset):
+
     def __init__(self, *args, **kwargs):
         if "transforms" not in kwargs:
             transforms = Compose([
-                Resize(),
                 Normalization(),
+                Resize(),
                 ToTensor(),
                 PermuteTensor((2, 0, 1))
             ])

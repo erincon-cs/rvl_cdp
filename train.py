@@ -25,7 +25,7 @@ def boolean(arg):
 
 _dataset_kwargs = {
     "rvlcdip": {"two_dim_map": True},
-    "cifar10": {},
+    "cifar10": {"nb_classes": 10},
     "food101": {"nb_classes": 101}
 }
 
@@ -36,7 +36,9 @@ def get_model_kwargs(dataset_name):
     if dataset_name not in _dataset_kwargs:
         raise ValueError("Dataset {} not defined!".format(dataset_name))
 
-    return _dataset_kwargs[dataset_name]
+    model_kwargs = _dataset_kwargs[dataset_name]
+
+    return model_kwargs
 
 
 def main():
