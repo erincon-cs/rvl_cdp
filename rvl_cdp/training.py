@@ -38,7 +38,7 @@ class Trainer:
         self.writer = SummaryWriter(summary_path)
 
     def _data_loop(self, data_loader, nb_epochs, criterion, minibatch_size=128, network_optimizer=None,
-                   keep_preds=False, eval=False):
+                   keep_preds=False):
         total_loss = []
         running_time = 0.0
 
@@ -71,10 +71,7 @@ class Trainer:
                 if network_optimizer is not None:
                     network_optimizer.zero_grad()
 
-                if eval:
-                    self.model.eval()
-                else:
-                    self.model.train()
+
 
                 output = self.model(image)
 
@@ -154,6 +151,7 @@ class Trainer:
                                               keep_preds=False)
 
     def evaluate(self, dataset, data_loader=None, minibatch_size=128):
+
         if not self.trained:
             raise UserWarning("Model is not trained yet!")
 
@@ -171,7 +169,8 @@ class Trainer:
 
         running_time, avg_loss = 0, 0
 
-        training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
+        with torch.no_grad():
+            training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
                                                    network_optimizer=None, keep_preds=True, eval=True)
         accuracy = accuracy_score(y, y_true)
 
