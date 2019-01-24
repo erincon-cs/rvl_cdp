@@ -38,7 +38,7 @@ class Trainer:
         self.writer = SummaryWriter(summary_path)
 
     def _data_loop(self, data_loader, nb_epochs, criterion, minibatch_size=128, network_optimizer=None,
-                   keep_preds=False):
+                   keep_preds=False, eval=False):
         total_loss = []
         running_time = 0.0
 
@@ -70,6 +70,10 @@ class Trainer:
 
                 if network_optimizer is not None:
                     network_optimizer.zero_grad()
+
+                if eval:
+                    self.model.eval()
+                else:
                     self.model.train()
 
                 output = self.model(image)
@@ -125,7 +129,6 @@ class Trainer:
                         self.writer.add_histogram(name, param.clone().cpu().data.numpy(), iteration)
 
             if keep_preds:
-
                 y = np.hstack(y)
                 y_true = np.hstack(y_true)
 
@@ -167,9 +170,9 @@ class Trainer:
             self.model.cuda()
 
         running_time, avg_loss = 0, 0
-        self.model.eval()
+
         training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
-                                                   network_optimizer=None, keep_preds=True)
+                                                   network_optimizer=None, keep_preds=True, eval=True)
         accuracy = accuracy_score(y, y_true)
 
         print("\nAccuracy: {0:.2f}".format(accuracy))
