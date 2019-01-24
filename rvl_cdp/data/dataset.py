@@ -129,8 +129,8 @@ class Food101(BaseDataset):
     def __init__(self, *args, **kwargs):
         if "transforms" not in kwargs:
             transforms = Compose([
-                Normalization(),
                 Resize(),
+                Normalization(),
                 ToTensor(),
                 PermuteTensor((2, 0, 1))
             ])
