@@ -152,7 +152,7 @@ class Trainer:
 
         self.iteration = 0
 
-    def evaluate(self, dataset, data_loader=None, minibatch_size=128):
+    def evaluate(self, dataset, data_loader=None, minibatch_size=128, save=False):
 
         if not self.trained:
             raise UserWarning("Model is not trained yet!")
@@ -179,8 +179,9 @@ class Trainer:
 
         print("\nAccuracy: {0:.2f}".format(accuracy))
 
-        if accuracy > self.max_score:
+        if accuracy > self.max_score and save:
             self.max_score = accuracy
+
             self.model.save("{}".format(self.model_path))
 
         return accuracy, avg_loss

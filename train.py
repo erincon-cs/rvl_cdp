@@ -56,6 +56,7 @@ def main():
     arg_parser.add_argument("--epochs", default=20, type=int)
     arg_parser.add_argument("--summary-path", default="none", type=none_arg_path)
     arg_parser.add_argument("--weight-hists", default="y", type=boolean)
+    arg_parser.add_argument("--save-model", default="n", type=boolean)
     args = arg_parser.parse_args()
 
     datasets = load_datasets(args.dataset, data_path=args.data_path)
@@ -67,7 +68,6 @@ def main():
     trainer = Trainer(model, summary_path=args.summary_path, weight_histograms=args.weight_hists,
                       **datasets)
     trainer.fit(learning_rate=args.lr, minibatch_size=args.mb_size, nb_epochs=args.epochs)
-    trainer.model = Model.load(trainer.model_path)
     trainer.evaluate(datasets["test_dataset"])
 
 
