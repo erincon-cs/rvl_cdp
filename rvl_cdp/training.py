@@ -15,7 +15,7 @@ from tensorboardX import SummaryWriter
 
 class Trainer:
     def __init__(self, model, train_dataset, valid_dataset=None, test_dataset=None,
-                 summary_path=None, criterion=None, weight_histograms=True):
+                 summary_path=None, criterion=None, weight_histograms=True, model_path=None):
         self.model = model.train()
         self.training_dataset = train_dataset
         self.valid_dataset = valid_dataset
@@ -24,6 +24,7 @@ class Trainer:
         self.summary_path = summary_path
         self.weight_histograms = weight_histograms
         self.iteration = 0
+        self.model_path = model_path if model_path else self.model.name
 
         if criterion is None:
             self.criterion = nn.CrossEntropyLoss()
@@ -46,7 +47,7 @@ class Trainer:
         y = []
         y_true = []
         mean = torch.tensor([0.0])
-        var = torch.tensor([1.0])
+        var = torch.tensor([2.5])
 
         if torch.cuda.is_available():
             self.model.cuda()
@@ -171,13 +172,13 @@ class Trainer:
 
         with torch.no_grad():
             training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
-                                                       network_optimizer=None, keep_preds=False)
+                                                       network_optimizer=None, keep_preds=True)
         accuracy = accuracy_score(y, y_true)
 
         print("\nAccuracy: {0:.2f}".format(accuracy))
 
         if accuracy > self.max_score:
             self.max_score = accuracy
-            self.model.save("{}_model".format(self.summary_path))
+            self.model.save("{}_model".format(self.model_path))
 
         return accuracy, avg_loss
