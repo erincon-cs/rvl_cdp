@@ -181,6 +181,6 @@ class Trainer:
 
         if accuracy > self.max_score:
             self.max_score = accuracy
-            self.model.save("{}_model".format(self.model_path))
+            self.model.save("{}".format(self.model_path))
 
         return accuracy, avg_loss
