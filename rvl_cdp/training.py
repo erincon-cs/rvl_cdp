@@ -71,8 +71,6 @@ class Trainer:
                 if network_optimizer is not None:
                     network_optimizer.zero_grad()
 
-
-
                 output = self.model(image)
 
                 if keep_preds:
@@ -96,9 +94,8 @@ class Trainer:
 
                     loss += kl
 
-                loss.backward()
-
                 if network_optimizer is not None:
+                    loss.backward()
                     network_optimizer.step()
 
                 loss = loss.item()
@@ -174,7 +171,7 @@ class Trainer:
 
         with torch.no_grad():
             training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
-                                                   network_optimizer=None, keep_preds=True)
+                                                       network_optimizer=None, keep_preds=True)
         accuracy = accuracy_score(y, y_true)
 
         print("\nAccuracy: {0:.2f}".format(accuracy))
