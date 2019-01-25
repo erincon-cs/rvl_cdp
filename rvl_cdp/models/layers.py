@@ -38,7 +38,7 @@ class LinearReparameterzation(nn.Module):
         self.scale_weight = Parameter(scale_weight)
         self.register_parameter("scale_weight", self.scale_weight)
         self.loc_scale = 2.5
-        self.bias_scale
+        self.scale_bias = 10
 
         loc, log_scale = torch.tensor([0.0]), torch.tensor([self.loc_scale])
         scale_bias = torch.tensor([self.loc_bias])
