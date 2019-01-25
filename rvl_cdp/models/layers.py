@@ -1,7 +1,6 @@
 import torch
 import math
 
-
 from torch import nn as nn, distributions as tdist
 from torch.nn import Parameter, functional as F
 
@@ -38,22 +37,24 @@ class LinearReparameterzation(nn.Module):
         self.init_weight(scale_weight)
         self.scale_weight = Parameter(scale_weight)
         self.register_parameter("scale_weight", self.scale_weight)
+        self.loc_scale = 2.5
+        self.bias_scale
 
-        loc, scale = torch.tensor([0.0]), torch.tensor([2.5])
-        scale_bias = torch.tensor([10.0])
+        loc, log_scale = torch.tensor([0.0]), torch.tensor([self.loc_scale])
+        scale_bias = torch.tensor([self.loc_bias])
 
         if torch.cuda.is_available():
             loc = loc.cuda()
-            scale = scale.cuda()
+            log_scale = log_scale.cuda()
             scale_bias = scale_bias.cuda()
 
-        self.weight_normal = tdist.Normal(loc, scale)
-        self.bias_normal = tdist.Normal(loc, scale)
+        self.weight_normal = tdist.Normal(loc, log_scale)
+        self.bias_normal = tdist.Normal(loc, log_scale)
 
         self.kl_loss_weights = KLNormal()
         self.kl_loss_bias = KLNormal()
 
-        self.kl_loss_target_weights = tdist.Normal(loc.clone(), scale.clone())
+        self.kl_loss_target_weights = tdist.Normal(loc.clone(), log_scale.clone())
         self.kl_loss_target_bias = tdist.Normal(loc.clone(), scale_bias)
 
         self.scale_transform = _get_transform(transformer_name)
@@ -70,14 +71,11 @@ class LinearReparameterzation(nn.Module):
             self.register_parameter("scale_bias", self.scale_bias)
 
     def init_bias(self, m):
-        torch.nn.init.constant(m, math.log(math.e ** 10 - 1))
+        torch.nn.init.constant(m, math.log(math.e, self.scale_bias))
 
     def init_weight(self, m):
-        torch.nn.init.xavier_uniform(m)
-        # torch.nn.init.constant(m, math.log(math.e ** 2.5 - 1))
+        torch.nn.init.constant(m, 2 * math.log(math.e, self.loc_scale))
 
-    # def init_bias(self, b):
-    #     torch.nn.init.constant(b, 1.0)
 
     def forward(self, x):
 

@@ -23,6 +23,7 @@ class Trainer:
         self.trained = False
         self.summary_path = summary_path
         self.weight_histograms = weight_histograms
+        self.iteration = 0
 
         if criterion is None:
             self.criterion = nn.CrossEntropyLoss()
@@ -50,16 +51,15 @@ class Trainer:
         if torch.cuda.is_available():
             self.model.cuda()
 
-        iteration = 0
         running_loss = 0.0
 
-        mode = "training" if network_optimizer is not None else "inference"
+        mode = "training" if network_optimizer is not None else "valid"
 
         for i in range(1, nb_epochs + 1):
             print("Epoch: {}".format(i))
 
             for minibatch_i, samples in enumerate(data_loader):
-                iteration += 1
+                self.iteration += 1
                 start = time.time()
                 image, labels = samples["image"], samples["label"]
 
@@ -83,7 +83,7 @@ class Trainer:
 
                 labels = Variable(labels)
                 instance_likelihood = criterion(output, labels.argmax(dim=1))
-                self.writer.add_scalar("{} instance likelihood".format(mode), instance_likelihood, iteration)
+                self.writer.add_scalar("{} instance likelihood".format(mode), instance_likelihood, self.iteration)
 
                 loss = instance_likelihood
 
@@ -92,12 +92,13 @@ class Trainer:
 
                 if self.model._kl is not None:
                     kl = self.model._kl
-                    self.writer.add_scalar("{} kl".format(mode), kl, iteration)
+                    self.writer.add_scalar("{} kl".format(mode), kl, self.iteration)
 
                     loss += kl
 
+                loss.backward()
+
                 if network_optimizer is not None:
-                    loss.backward()
                     network_optimizer.step()
 
                 loss = loss.item()
@@ -109,21 +110,21 @@ class Trainer:
                 end = time.time()
                 running_time += (end - start)
 
-                avg_loss = running_loss / (iteration * minibatch_size)
+                avg_loss = running_loss / (self.iteration * minibatch_size)
                 avg_mb_time = running_time / (minibatch_i + 1)
                 sys.stdout.write("\r" + "running loss: {0:.5f}".format(avg_loss) + \
                                  " - average time minibatch: {0:.2f}s".format(avg_mb_time))
 
-                self.writer.add_scalar("{} loss".format(mode), avg_loss, iteration)
+                self.writer.add_scalar("{} loss".format(mode), avg_loss, self.iteration)
                 sys.stdout.flush()
 
                 if keep_preds:
                     preds = self.model.predict(image)
                     y.append(preds)
 
-                if iteration % 10 == 0 and self.weight_histograms:
+                if self.iteration % 10 == 0 and self.weight_histograms:
                     for name, param in self.model._classifier.named_parameters():
-                        self.writer.add_histogram(name, param.clone().cpu().data.numpy(), iteration)
+                        self.writer.add_histogram(name, param.clone().cpu().data.numpy(), self.iteration)
 
             if keep_preds:
                 y = np.hstack(y)
@@ -132,8 +133,8 @@ class Trainer:
             if self.valid_dataset and network_optimizer is not None:
                 accuracy, valid_loss = self.evaluate(self.valid_dataset)
 
-                self.writer.add_scalar("valid_loss", valid_loss, i)
-                self.writer.add_scalar("valid_accuracy", accuracy, i)
+                self.writer.add_scalar("valid_loss", valid_loss, self.iteration)
+                self.writer.add_scalar("valid_accuracy", accuracy, self.iteration)
 
                 print("\nEpoch {} loss: {}".format(i, np.mean(total_loss)))
 
@@ -149,6 +150,8 @@ class Trainer:
                                  shuffle=True, num_workers=num_workers)
         training_loss, _, _ = self._data_loop(data_loader, nb_epochs, criterion, minibatch_size, network_optimizer,
                                               keep_preds=False)
+
+        self.iteration = 0
 
     def evaluate(self, dataset, data_loader=None, minibatch_size=128):
 
