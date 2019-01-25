@@ -171,7 +171,7 @@ class Trainer:
 
         with torch.no_grad():
             training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
-                                                       network_optimizer=None, keep_preds=True)
+                                                       network_optimizer=None, keep_preds=False)
         accuracy = accuracy_score(y, y_true)
 
         print("\nAccuracy: {0:.2f}".format(accuracy))
