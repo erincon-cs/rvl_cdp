@@ -16,7 +16,7 @@ from tensorboardX import SummaryWriter
 class Trainer:
     def __init__(self, model, train_dataset, valid_dataset=None, test_dataset=None,
                  summary_path=None, criterion=None, weight_histograms=True, model_path=None):
-        self.model = model.train()
+        self.model = model
         self.training_dataset = train_dataset
         self.valid_dataset = valid_dataset
         self.test_dataset = test_dataset
@@ -146,6 +146,7 @@ class Trainer:
         criterion = nn.CrossEntropyLoss()
         data_loader = DataLoader(self.training_dataset, batch_size=minibatch_size,
                                  shuffle=True, num_workers=num_workers)
+        self.model.train()
         training_loss, _, _ = self._data_loop(data_loader, nb_epochs, criterion, minibatch_size, network_optimizer,
                                               keep_preds=False)
 
@@ -171,6 +172,7 @@ class Trainer:
         running_time, avg_loss = 0, 0
 
         with torch.no_grad():
+            self.model.eval()
             training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
                                                        network_optimizer=None, keep_preds=True)
         accuracy = accuracy_score(y, y_true)
