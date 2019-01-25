@@ -67,6 +67,7 @@ def main():
     trainer = Trainer(model, summary_path=args.summary_path, weight_histograms=args.weight_hists,
                       **datasets)
     trainer.fit(learning_rate=args.lr, minibatch_size=args.mb_size, nb_epochs=args.epochs)
+    trainer.model = Model.load(trainer.model_path)
     trainer.evaluate(datasets["test_dataset"])
 
 
