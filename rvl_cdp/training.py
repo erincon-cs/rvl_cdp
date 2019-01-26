@@ -130,6 +130,7 @@ class Trainer:
 
             if self.valid_dataset and network_optimizer is not None:
                 accuracy, valid_loss = self.evaluate(self.valid_dataset)
+                print("\nValid accuracy: {0:.2f} | Valid loss: {0:.2f}".format(accuracy, valid_loss))
 
                 self.writer.add_scalar("valid_loss", valid_loss, self.iteration)
                 self.writer.add_scalar("valid_accuracy", accuracy, self.iteration)
@@ -177,7 +178,6 @@ class Trainer:
                                                        network_optimizer=None, keep_preds=True)
         accuracy = accuracy_score(y, y_true)
 
-        print("\nAccuracy: {0:.2f}".format(accuracy))
 
         if accuracy > self.max_score and save:
             self.max_score = accuracy

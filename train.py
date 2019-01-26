@@ -68,8 +68,8 @@ def main():
     trainer = Trainer(model, summary_path=args.summary_path, weight_histograms=args.weight_hists,
                       **datasets)
     trainer.fit(learning_rate=args.lr, minibatch_size=args.mb_size, nb_epochs=args.epochs)
-    trainer.evaluate(datasets["test_dataset"])
-
+    accuracy, avg_loss = trainer.evaluate(datasets["test_dataset"])
+    print("\nTest accuracy: {0:.2f} | Test loss: {0:.2f}".format(accuracy, avg_loss))
 
 if __name__ == '__main__':
     main()
