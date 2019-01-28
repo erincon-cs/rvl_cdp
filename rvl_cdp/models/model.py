@@ -189,7 +189,7 @@ class PretrainedBCNN(BaseModel):
 
 
 class DenseNet121(BaseModel):
-    def __init__(self, nb_classes=16, image_shape=(256, 256), pretrained=True,
+    def __init__(self, nb_classes=16, image_shape=(512, 512), pretrained=True,
                  feature_extraction_only=False, two_dim_map=False):
         super(DenseNet121, self).__init__("DenseNet121")
 
@@ -198,8 +198,11 @@ class DenseNet121(BaseModel):
         self.pretrained = pretrained
         self.two_dim_map = two_dim_map
 
+
+
         if self.two_dim_map:
-            self._conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
+            self._conv_mapping = nn.Conv2d(1, 3, kernel_size=(2, 2))
+            # self._conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
 
         net = densenet121(pretrained=pretrained)
 
@@ -207,7 +210,7 @@ class DenseNet121(BaseModel):
             net = self._freeze_layers(net)
 
         self._features = nn.Sequential(*list(net.children())[:-1])
-        self._classifier = nn.Linear(net.classifier.in_features, self.nb_classes)
+        self._classifier = nn.Linear(net.classifier.in_features * 2, self.nb_classes)
         self._softmax = nn.Softmax(dim=1)
 
     def forward(self, x):

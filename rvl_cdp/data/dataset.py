@@ -83,7 +83,7 @@ class RVLCDIPDataset(BaseDataset):
     def __init__(self, *args, **kwargs):
         if "transforms" not in kwargs:
             transforms = Compose([
-                Resize(),
+                Resize((500, 256)),
                 Normalization(),
                 ToTensor(unsqueeze=True),
                 PermuteTensor((2, 0, 1))
