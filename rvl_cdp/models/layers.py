@@ -11,6 +11,11 @@ _transforms = {
     "exp": torch.exp
 }
 
+_dists = {
+    "normal": tdist.Normal,
+    "cuachy": tdist.Cauchy
+}
+
 
 def _get_transform(transform_name):
     transform_name = transform_name.lower()
@@ -21,8 +26,18 @@ def _get_transform(transform_name):
     return _transforms[transform_name]
 
 
+def _get_dist(dist_name):
+    dist_name = dist_name.lower()
+
+    if dist_name not in _dists:
+        raise ValueError("Distribution function {} not defined!".format(dist_name))
+
+    return _dists[dist_name]
+
+
 class LinearReparameterzation(nn.Module):
-    def __init__(self, in_features, out_features, bias=True, transformer_name="exp"):
+    def __init__(self, in_features, out_features, bias=True, transformer_name="exp",
+                 prior_dist='normal'):
         super(LinearReparameterzation, self).__init__()
 
         self.in_features = in_features
@@ -39,6 +54,7 @@ class LinearReparameterzation(nn.Module):
         self.register_parameter("scale_weight", self.scale_weight)
         self.loc_scale = 2.5
         self.scale_bias = 10
+        self.dist = _get_dist(prior_dist)
 
         loc, log_scale = torch.tensor([0.0]), torch.tensor([self.loc_scale])
         scale_bias = torch.tensor([self.loc_bias])
@@ -75,7 +91,6 @@ class LinearReparameterzation(nn.Module):
 
     def init_weight(self, m):
         torch.nn.init.constant(m, 2 * math.log(math.e, self.loc_scale))
-
 
     def forward(self, x):
 
