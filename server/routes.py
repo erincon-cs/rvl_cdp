@@ -80,7 +80,8 @@ def upload_file():
         # image = np.fromstring(image, np.uint8)
         img = Image.open(image_bytes)
 
-        if len(img.shape) > 2:
+        bands = img.getbands()
+        if bands == ('R', 'G', 'B') or bands == ('R', 'G', 'B', 'A'):
             img = img.convert('1')
 
         # produces a PIL Image object
