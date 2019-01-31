@@ -42,6 +42,8 @@ def read_textfile(image_paths, path):
 
 
 class BaseDataset(Dataset):
+    data_dict = None
+
     def __init__(self, nb_classes, images_path=None, labels_path=None, data=None, label_dict=None,
                  transforms=None):
         super(BaseDataset, self).__init__()
@@ -52,7 +54,6 @@ class BaseDataset(Dataset):
                 Resize(),
                 ToTensor()
             ])
-
         self.transforms = transforms
         self.nb_classes = nb_classes
         self.images_path = images_path
@@ -60,6 +61,7 @@ class BaseDataset(Dataset):
 
         self.label_dict = label_dict if label_dict is not None else OrderedDict()
         self.data = data if data is not None else self.read_data()
+
 
     def __getitem__(self, idx):
         image_path, label = self.data.path.iloc[idx], self.data.label.iloc[idx]
@@ -78,8 +80,34 @@ class BaseDataset(Dataset):
     def read_data(self):
         pass
 
+    @classmethod
+    def get_label_name(cls, label_int):
+        if label_int not in cls.data_dict:
+            raise ValueError("label {} not defined!".format(label_int))
+
+        return cls.data_dict[label_int]
+
 
 class RVLCDIPDataset(BaseDataset):
+    data_dict = {
+        0: "letter",
+        1: "form",
+        2: "email",
+        3: "handwritten",
+        4: "advertisement",
+        5: "scientific report",
+        6: "scientific publication",
+        7: "specification",
+        8: "file folder",
+        9: "news article",
+        10: "budget",
+        11: "invoice",
+        12: "presentation",
+        13: "questionnaire",
+        14: "resume",
+        15: "memo"
+    }
+
     def __init__(self, *args, **kwargs):
         if "transforms" not in kwargs:
             transforms = Compose([

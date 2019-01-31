@@ -31,8 +31,7 @@ class BaseModel(nn.Module):
 
     def predict(self, x):
         preds = self.forward(x).cpu()
-        preds = self._softmax(preds).numpy()
-
+        preds = self._softmax(preds).data
         preds = np.argmax(preds, axis=1)
 
         return preds
@@ -66,8 +65,6 @@ class BaseModel(nn.Module):
 
     @classmethod
     def load(cls, path, map_location="cpu", *args, **kwargs):
-        print(cls)
-
         model_attrs = os.path.join(path, "model_attrs.json")
 
         with open(model_attrs, "r") as fp:
@@ -76,12 +73,13 @@ class BaseModel(nn.Module):
         model = cls()
 
         for key, value in model_attrs.items():
-            print(key, value)
             setattr(model, key, value)
         state_dict_path = os.path.join(path, "model_state.pth")
         state_dict = torch.load(state_dict_path, map_location=map_location)
 
         model.load_state_dict(state_dict)
+
+        return model
 
 
 class BayesianCNN(BaseModel):
@@ -190,7 +188,7 @@ class PretrainedBCNN(BaseModel):
 
 class DenseNet121(BaseModel):
     def __init__(self, nb_classes=16, image_shape=(512, 512), pretrained=True,
-                 feature_extraction_only=False, two_dim_map=False):
+                 feature_extraction_only=False, two_dim_map=True):
         super(DenseNet121, self).__init__("DenseNet121")
 
         self.nb_classes = nb_classes

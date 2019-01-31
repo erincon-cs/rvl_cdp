@@ -129,6 +129,15 @@ class ToTensor:
 
         return {"image": image, "label": label}
 
+class UnSqueeze:
+    def __call__(self, sample, *args, **kwargs):
+        image, label = sample["image"], sample['label']
+
+        image = image.unsqueeze(1)
+
+        return {"image": image, "label": label}
+
+
 
 class PermuteTensor:
     def __init__(self, reordering):

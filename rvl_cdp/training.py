@@ -178,7 +178,6 @@ class Trainer:
                                                        network_optimizer=None, keep_preds=True)
         accuracy = accuracy_score(y, y_true)
 
-
         if accuracy > self.max_score and save:
             self.max_score = accuracy
 
