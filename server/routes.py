@@ -26,6 +26,8 @@ def read_model(model_path):
 
 
 def classify_image(image):
+
+
     with open('server/args.json', 'r') as data_file:
         data = json.load(data_file)
     model_path = data["model_path"]
@@ -45,8 +47,6 @@ def classify_image(image):
     image = transforms({"image": image, "label": None})
 
     prediction = _model.predict(image["image"])
-
-
 
     return Dataset.get_label_name(int(prediction.data[0]))
 
@@ -79,6 +79,10 @@ def upload_file():
         image_bytes = BytesIO(file.stream.read())
         # image = np.fromstring(image, np.uint8)
         img = Image.open(image_bytes)
+
+        if len(image.shape) > 2:
+            img = img.convert('1')
+
         # produces a PIL Image object
         img = np.asarray(img)
         prediction = classify_image(img)
