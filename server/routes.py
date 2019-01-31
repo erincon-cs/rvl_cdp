@@ -80,7 +80,7 @@ def upload_file():
         # image = np.fromstring(image, np.uint8)
         img = Image.open(image_bytes)
 
-        if len(image.shape) > 2:
+        if len(img.shape) > 2:
             img = img.convert('1')
 
         # produces a PIL Image object
