@@ -44,6 +44,7 @@ class LinearReparameterzation(nn.Module):
         self.out_features = out_features
         self.loc_scale = 2.5
         self.scale_bias = 10
+        self.loc_bias_weight = 10
         self.dist = _get_dist(prior_dist)
 
         loc_weight = torch.Tensor(out_features, in_features)
@@ -57,7 +58,7 @@ class LinearReparameterzation(nn.Module):
         self.register_parameter("scale_weight", self.scale_weight)
 
         loc, log_scale = torch.tensor([0.0]), torch.tensor([self.loc_scale])
-        scale_bias = torch.tensor([self.loc_bias])
+        scale_bias = torch.tensor([self.loc_bias_weight])
 
         if torch.cuda.is_available():
             loc = loc.cuda()
