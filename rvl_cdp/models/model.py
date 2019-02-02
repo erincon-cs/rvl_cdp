@@ -61,7 +61,7 @@ class BaseModel(nn.Module):
         torch.save(self.state_dict(), os.path.join(path, "model_state.pth".format(self.name)))
 
     def _get_non_torch_attrs(self):
-        return dict([(k, v) for k, v in self.__dict__.items() if k[0] != "_" ])
+        return dict([(k, v) for k, v in self.__dict__.items() if k[0] != "_"])
 
     @classmethod
     def load(cls, path, map_location="cpu", *args, **kwargs):
@@ -196,11 +196,8 @@ class DenseNet121(BaseModel):
         self.pretrained = pretrained
         self.two_dim_map = two_dim_map
 
-
-
         if self.two_dim_map:
             self._conv_mapping = nn.Conv2d(1, 3, kernel_size=(2, 2))
-            # self._conv_mapping = nn.Conv2d(1, 3, kernel_size=(1, 1))
 
         net = densenet121(pretrained=pretrained)
 
@@ -224,7 +221,6 @@ class DenseNet121(BaseModel):
         return x
 
 
-
 class BayesianLogisticRegression(BaseModel):
     def __init__(self, nb_classes, in_features):
         super(BayesianLogisticRegression, self).__init__("BayesianLogisticRegression")
@@ -237,6 +233,3 @@ class BayesianLogisticRegression(BaseModel):
         x = self._classifier(x)
 
         return x
-
-
-

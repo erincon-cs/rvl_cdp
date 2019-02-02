@@ -41,6 +41,16 @@ def read_textfile(image_paths, path):
     return pd.DataFrame(examples, columns=["path", "label"])
 
 
+class NoTransforms:
+    def __bool__(self):
+        return False
+
+    def __len__(self):
+        return 0
+
+    __nonzero__ = __bool__
+
+
 class BaseDataset(Dataset):
     data_dict = None
 
@@ -62,7 +72,6 @@ class BaseDataset(Dataset):
         self.label_dict = label_dict if label_dict is not None else OrderedDict()
         self.data = data if data is not None else self.read_data()
 
-
     def __getitem__(self, idx):
         image_path, label = self.data.path.iloc[idx], self.data.label.iloc[idx]
 
@@ -72,7 +81,8 @@ class BaseDataset(Dataset):
             sample = self.transforms({"image": image, "label": label})
             image, label = sample["image"], sample['label']
 
-        return {"image": image, "label": one_hot(label, self.nb_classes)}
+        return {"image": image, "label": one_hot(label, self.nb_classes),
+                "path": image_path, "idx": idx}
 
     def __len__(self):
         return len(self.data)

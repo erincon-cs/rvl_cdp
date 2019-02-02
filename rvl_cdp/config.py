@@ -1,0 +1,1 @@
+TESSERACT_PATH = "/usr/local/Cellar/tesseract/4.0.0/bin/tesseract"

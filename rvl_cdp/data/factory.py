@@ -29,9 +29,9 @@ def load_rvlcdip(data_path, *args, **kwargs):
     valid_labels = os.path.join(labels_path, "val.txt")
     test_labels = os.path.join(labels_path, "test.txt")
 
-    train_dataset = Dataset(images_path=images_path, labels_path=train_labels)
-    valid_dataset = Dataset(images_path=images_path, labels_path=valid_labels)
-    test_dataset = Dataset(images_path=images_path, labels_path=test_labels)
+    train_dataset = Dataset(images_path=images_path, labels_path=train_labels, *args, **kwargs)
+    valid_dataset = Dataset(images_path=images_path, labels_path=valid_labels, *args, **kwargs)
+    test_dataset = Dataset(images_path=images_path, labels_path=test_labels, *args, **kwargs)
 
     return {"train_dataset": train_dataset, "valid_dataset": valid_dataset, "test_dataset": test_dataset}
 
@@ -47,9 +47,9 @@ def load_cifar10(data_path, *args, **kwargs):
 
     train_data, valid_data = train_data.reset_index(drop=True), valid_data.reset_index(drop=True)
 
-    train_dataset = Dataset(data=train_data, label_dict=label_dict)
-    valid_dataset = Dataset(data=valid_data, label_dict=label_dict)
-    test_dataset = Dataset(data=test_data, label_dict=label_dict)
+    train_dataset = Dataset(data=train_data, label_dict=label_dict, *args, **kwargs)
+    valid_dataset = Dataset(data=valid_data, label_dict=label_dict, *args, **kwargs)
+    test_dataset = Dataset(data=test_data, label_dict=label_dict, *args, **kwargs)
 
     return {"train_dataset": train_dataset, "valid_dataset": valid_dataset, "test_dataset": test_dataset}
 
@@ -65,9 +65,9 @@ def load_food101(data_path, *args, **kwargs):
     train_data, valid_data = train_test_split(train_data, test_size=0.2, random_state=2019)
     train_data, valid_data = train_data.reset_index(drop=True), valid_data.reset_index(drop=True)
 
-    train_dataset = Dataset(data=train_data, label_dict=label_dict)
-    valid_dataset = Dataset(data=valid_data, label_dict=label_dict)
-    test_dataset = Dataset(data=test_data, label_dict=label_dict)
+    train_dataset = Dataset(data=train_data, label_dict=label_dict, *args, **kwargs)
+    valid_dataset = Dataset(data=valid_data, label_dict=label_dict, *args, **kwargs)
+    test_dataset = Dataset(data=test_data, label_dict=label_dict, *args, **kwargs)
 
     return {"train_dataset": train_dataset, "valid_dataset": valid_dataset, "test_dataset": test_dataset}
 
@@ -104,7 +104,7 @@ def get_dataset_path(dataset_name):
     return _dataset_paths[dataset_name]
 
 
-def load_datasets(dataset_name, data_path=None):
+def load_datasets(dataset_name, data_path=None, *args, **kwargs):
     if data_path is not None:
         data_utils.check_exist_path(data_path)
 
@@ -113,4 +113,4 @@ def load_datasets(dataset_name, data_path=None):
 
     dataset_loader = get_dataset_loader(dataset_name)
 
-    return dataset_loader(data_path)
+    return dataset_loader(data_path, *args, **kwargs)
