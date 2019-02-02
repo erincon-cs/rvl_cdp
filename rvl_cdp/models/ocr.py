@@ -6,10 +6,13 @@ except ImportError:
 from rvl_cdp.config import TESSERACT_PATH
 import pytesseract
 
-pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
-
 
 class Tesseract:
+    def __init__(self, path=None):
+        if path is None:
+            path = TESSERACT_PATH
+
+        pytesseract.pytesseract.tesseract_cmd = path
+
     def get_text(self, image):
         return pytesseract.image_to_string(image)
-
