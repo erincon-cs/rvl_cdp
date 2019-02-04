@@ -40,7 +40,7 @@ class Trainer:
         self.writer = SummaryWriter(summary_path)
 
     def _data_loop(self, data_loader, nb_epochs, criterion, minibatch_size=128, network_optimizer=None,
-                   keep_preds=False):
+                   keep_preds=False, scale_likelihood=True):
         total_loss = []
         running_time = 0.0
 
@@ -82,8 +82,11 @@ class Trainer:
 
                 labels = Variable(labels)
                 instance_likelihood = criterion(output, labels.argmax(dim=1))
-                self.writer.add_scalar("{} instance likelihood".format(mode), instance_likelihood, self.iteration)
 
+                if scale_likelihood:
+                    instance_likelihood *= len(self.training_dataset)
+
+                self.writer.add_scalar("{} instance likelihood".format(mode), instance_likelihood, self.iteration)
                 loss = instance_likelihood
 
                 if self.model._kl is not None:
