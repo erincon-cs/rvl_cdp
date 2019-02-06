@@ -109,8 +109,13 @@ class LinearReparameterzation(nn.Module):
 
         scale_weight, scale_bias = self.scale_transform(scale_weight), self.scale_transform(scale_bias)
 
-        loc = loc_weight + scale_weight * epsilon_weight
-        bias = loc_bias + scale_bias * epsilon_bias
+        if self.training:
+            loc = loc_weight + scale_weight * epsilon_weight
+            bias = scale_bias + scale_bias * epsilon_bias
+        else:
+
+            loc = loc_weight
+            bias = loc_bias
 
         weight_mean, weight_std = torch.Tensor([0.0]), torch.Tensor([2.5])
         bias_mean, bias_std = torch.Tensor([0.0]), torch.Tensor([10])
