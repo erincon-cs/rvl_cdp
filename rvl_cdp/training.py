@@ -4,13 +4,30 @@ import os
 import numpy as np
 import torch
 
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, \
+    recall_score
 
 from torch import optim, nn as nn
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
 from tensorboardX import SummaryWriter
+
+_metrics = {
+    "accuracy": accuracy_score,
+    "recall": recall_score,
+    "precision": precision_score,
+    "f1_score": f1_score
+}
+
+
+def _get_metric(metric_name: str):
+    metric_name = metric_name.lower().strip()
+
+    if metric_name not in _metrics:
+        raise ValueError("Metric name {} is not defiend!".format(metric_name))
+
+    return _metrics.get(_metrics)
 
 
 class Trainer:
@@ -156,7 +173,14 @@ class Trainer:
 
         self.iteration = 0
 
-    def evaluate(self, dataset, data_loader=None, minibatch_size=128, save=False):
+    def evaluate(self, dataset, data_loader=None, minibatch_size=128, save=False,
+                 metrics=None, metric_check="accuracy"):
+
+        if metrics is None:
+            metrics = {"accuracy"}
+
+        if metric_check not in metrics:
+            raise ValueError("Metric check {} is not in the defined metrics: {}!".format(metric_check, metrics))
 
         if not self.trained:
             raise UserWarning("Model is not trained yet!")
@@ -164,6 +188,9 @@ class Trainer:
         if data_loader is None:
             data_loader = DataLoader(dataset, batch_size=minibatch_size,
                                      shuffle=False, num_workers=3)
+
+        if self.max_score == 0:
+            self.model.save(self.model_path)
 
         print("Evaluating on {} examples\n".format(len(data_loader)))
 
@@ -179,11 +206,14 @@ class Trainer:
             self.model.eval()
             training_loss, y, y_true = self._data_loop(data_loader, 1, criterion, minibatch_size,
                                                        network_optimizer=None, keep_preds=True)
-        accuracy = accuracy_score(y, y_true)
 
-        if accuracy > self.max_score and save:
-            self.max_score = accuracy
+        metrics_results = {metric_name: _get_metric(metric_name)(y, y_true) for metric_name in metrics}
 
-            self.model.save("{}".format(self.model_path))
+        max_metric = metrics.get(metric_check)
 
-        return accuracy, avg_loss
+        if max_metric > self.max_score and save:
+            self.max_score = max_metric
+
+            self.model.save(self.model_path)
+
+        return metrics_results, avg_loss

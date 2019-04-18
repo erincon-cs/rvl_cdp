@@ -51,6 +51,8 @@ class BaseModel(nn.Module):
         """
 
         if not os.path.exists(path):
+            print("-" * 100)
+            print("Model path dir {} does not exist! Creating...".format(path))
             os.makedirs(path)
 
         model_attrs = os.path.join(path, "model_attrs.json")
@@ -188,7 +190,7 @@ class PretrainedBCNN(BaseModel):
 
 class DenseNet121(BaseModel):
     def __init__(self, nb_classes=16, image_shape=(512, 512), pretrained=True,
-                 feature_extraction_only=False, two_dim_map=True):
+                 finetune=False, two_dim_map=True):
         super(DenseNet121, self).__init__("DenseNet121")
 
         self.nb_classes = nb_classes
@@ -201,7 +203,7 @@ class DenseNet121(BaseModel):
 
         net = densenet121(pretrained=pretrained)
 
-        if feature_extraction_only:
+        if finetune:
             net = self._freeze_layers(net)
 
         self._features = nn.Sequential(*list(net.children())[:-1])

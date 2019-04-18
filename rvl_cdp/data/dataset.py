@@ -141,6 +141,49 @@ class RVLCDIPDataset(BaseDataset):
         return read_textfile(self.images_path, self.labels_path)
 
 
+class RVLCDIPInvoiceDataset(RVLCDIPDataset):
+    data_dict = {
+        0: "other",
+        1: "invoice"
+    }
+
+    def __init__(self, *args, **kwargs):
+        if "transforms" not in kwargs:
+            transforms = Compose([
+                Resize((500, 256)),
+                Normalization(),
+                ToTensor(unsqueeze=True),
+                PermuteTensor((2, 0, 1))
+            ])
+
+            kwargs["transforms"] = transforms
+
+        super(RVLCDIPDataset, self).__init__(*args, nb_classes=2, **kwargs)
+
+        if os.path.exists("data/rvl_cdip/errors.txt"):
+            with open("data/rvl_cdip/errors.txt") as error_files:
+                error_paths = error_files.readlines()
+
+                self.data = self.data[~self.data.path.isin(error_paths)]
+
+    def __getitem__(self, idx):
+        image_path, label = self.data.path.iloc[idx], self.data.label.iloc[idx]
+
+        image = io.imread(image_path)
+
+        if self.transforms:
+            sample = self.transforms({"image": image, "label": label})
+            image, label = sample["image"], sample['label']
+
+            label = 1 if label == 11 else 0
+
+        return {"image": image, "label": one_hot(label, self.nb_classes),
+                "path": image_path, "idx": idx}
+
+    def read_data(self):
+        return read_textfile(self.images_path, self.labels_path)
+
+
 class CIFAR10(BaseDataset):
     def __init__(self, *args, **kwargs):
         if "transforms" not in kwargs:

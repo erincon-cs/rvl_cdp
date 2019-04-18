@@ -1,14 +1,15 @@
 import os
 import rvl_cdp.data.util as data_utils
 
-from rvl_cdp.data.dataset import RVLCDIPDataset, CIFAR10, Food101
+from rvl_cdp.data.dataset import RVLCDIPDataset, CIFAR10, Food101, RVLCDIPInvoiceDataset
 
 from sklearn.model_selection import train_test_split
 
 _datasets = {
     "rvlcdip": RVLCDIPDataset,
     "cifar10": CIFAR10,
-    "food101": Food101
+    "food101": Food101,
+    "invoices": RVLCDIPInvoiceDataset
 }
 
 
@@ -24,6 +25,21 @@ def get_dataset(dataset_name):
 def load_rvlcdip(data_path, *args, **kwargs):
     images_path, labels_path = os.path.join(data_path, "images"), os.path.join(data_path, "labels")
     Dataset = get_dataset("rvlcdip")
+
+    train_labels = os.path.join(labels_path, "train.txt")
+    valid_labels = os.path.join(labels_path, "val.txt")
+    test_labels = os.path.join(labels_path, "test.txt")
+
+    train_dataset = Dataset(images_path=images_path, labels_path=train_labels, *args, **kwargs)
+    valid_dataset = Dataset(images_path=images_path, labels_path=valid_labels, *args, **kwargs)
+    test_dataset = Dataset(images_path=images_path, labels_path=test_labels, *args, **kwargs)
+
+    return {"train_dataset": train_dataset, "valid_dataset": valid_dataset, "test_dataset": test_dataset}
+
+
+def load_rvlcdip_invoices(data_path, *args, **kwargs):
+    images_path, labels_path = os.path.join(data_path, "images"), os.path.join(data_path, "labels")
+    Dataset = get_dataset("invoices")
 
     train_labels = os.path.join(labels_path, "train.txt")
     valid_labels = os.path.join(labels_path, "val.txt")
@@ -74,6 +90,7 @@ def load_food101(data_path, *args, **kwargs):
 
 _dataset_loaders = {
     "rvlcdip": load_rvlcdip,
+    "invoices": load_rvlcdip_invoices,
     "cifar10": load_cifar10,
     "food101": load_food101
 }
@@ -90,6 +107,7 @@ def get_dataset_loader(dataset_name):
 
 _dataset_paths = {
     "rvlcdip": "data/rvl_cdip",
+    "invoices": "data/rvl_cdip",
     "cifar10": "data/cifar10",
     "food101": "data/food-101"
 }
