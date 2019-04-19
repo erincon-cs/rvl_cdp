@@ -27,7 +27,7 @@ def _get_metric(metric_name: str):
     if metric_name not in _metrics:
         raise ValueError("Metric name {} is not defiend!".format(metric_name))
 
-    return _metrics.get(_metrics)
+    return _metrics.get(metric_name)
 
 
 class Trainer:
