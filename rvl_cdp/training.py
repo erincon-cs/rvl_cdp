@@ -209,7 +209,7 @@ class Trainer:
 
         metrics_results = {metric_name: _get_metric(metric_name)(y, y_true) for metric_name in metrics}
 
-        max_metric = metrics.get(metric_check)
+        max_metric = metrics_results.get(metric_check)
 
         if max_metric > self.max_score and save:
             self.max_score = max_metric
